@@ -358,4 +358,17 @@ a:hover {
 
     h1 { font-size: 2rem; }
     h2 { font-size: 1.6rem; }
+
+    /* 新增：使后台的行内表单在小屏幕上垂直堆叠 */
+    .inline-form {
+        flex-direction: column; /* 将 flex 布局方向改为垂直 */
+        align-items: stretch;   /* 使子项宽度与容器一致 */
+        width: 100%;            /* 确保表单容器占满可用宽度 */
+    }
+
+    .inline-form input,
+    .inline-form button {
+        width: 100%; /* 让输入框和按钮也占满宽度 */
+        margin: 0;   /* 重置可能存在的外边距 */
+    }
 }
