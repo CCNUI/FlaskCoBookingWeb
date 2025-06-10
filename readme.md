@@ -35,38 +35,36 @@ A full-featured, deployable booking system for group study rooms, built with Fla
 ```bash
 git clone <your-repo-url>
 cd Flask-SmartBooking-System
-```
 创建并激活虚拟环境：
 
-```Bash
+Bash
+
 python -m venv venv
 source venv/bin/activate  # on Windows use `venv\Scripts\activate`
-```
 安装依赖：
 
-```Bash
+Bash
+
 pip install -r requirements.txt
-```
 2. 配置
 创建一个 .env 文件，并设置管理员密码：
-```Bash
-ADMIN_PASSWORD=your_strong_password_here
-```
-* 对于 Vercel 部署:
 
-  你还需要在 Vercel 的环境变量中设置 KV_URL, KV_REST_API_URL, KV_REST_API_TOKEN, 和 KV_REST_API_READ_ONLY_TOKEN。这些值在你创建 Vercel KV 数据库后会自动提供。同时，也需要在 Vercel 中设置 ADMIN_PASSWORD。
+ADMIN_PASSWORD=your_strong_password_here
+对于 Vercel 部署:
+
+你还需要在 Vercel 的环境变量中设置 KV_URL, KV_REST_API_URL, KV_REST_API_TOKEN, 和 KV_REST_API_READ_ONLY_TOKEN。这些值在你创建 Vercel KV 数据库后会自动提供。同时，也需要在 Vercel 中设置 ADMIN_PASSWORD。
 
 3. 本地运行 (使用 SQLite)
 首先，初始化数据库：
 
-```Bash
+Bash
+
 flask init-db
-```
 然后，启动开发服务器：
 
-```Bash
+Bash
+
 flask run
-```
 访问 [http://127.0.0.1:5000](http://127.0.0.1:5000)。
 
 4. 部署到 Vercel
@@ -77,5 +75,5 @@ flask run
 预约日历: 网格化展示，支持周导航。
 操作日志: 追踪所有变更。
 管理员后台: 强大的管理功能。
-
+技术支持: yudas | 宇达司飞机工业
 © 2017-2025 优智通科技. All rights reserved.

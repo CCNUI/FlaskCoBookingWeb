@@ -21,12 +21,12 @@
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}">退出登录</a></p>
     <div class="admin-panel">
         <div class="admin-section">
-            <h3 class="collapsible">特殊日期管理 (斋日)
+            <h3 class="collapsible">特殊日期管理 (斋日等)
                 <span class="toggle-icon">-</span>
             </h3>
             <div class="collapsible-content">
                 <div class="info-box">
-                    <strong>提示:</strong> 添加或删除斋日操作立即生效。
+                    <strong>提示:</strong> 添加或删除特殊日期会立即生效，并影响预约日历的显示。
                 </div>
                 <h4>添加新特殊日期</h4>
                 <form action="{{ url_for('manage_special_dates') }}" method="post" class="inline-form">
@@ -60,7 +60,7 @@
             </h3>
             <div class="collapsible-content">
                 <div class="info-box">
-                    <strong>提示:</strong> 修改或删除时间段列表将可能造成现有记录丢失。请确保格式为 "HH:MM-HH:MM"。
+                    <strong>提示:</strong> 修改时间段列表将立即改变预约日历的行结构。请确保格式为 "HH:MM-HH:MM"。
                 </div>
                 <form action="{{ url_for('manage_time_slots') }}" method="post" id="timeSlotsForm">
                     <div id="timeSlotsContainer">
@@ -74,6 +74,16 @@
                     <button type="button" id="addSlotBtn" class="button-secondary">添加一个时间段</button>
                     <button type="submit" class="button-primary">保存所有时间段</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">数据管理
+                <span class="toggle-icon">-</span>
+            </h3>
+            <div class="collapsible-content">
+                <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
+                <a href="{{ url_for('export_data') }}" class="button-primary">导出为 .CSV 文件</a>
             </div>
         </div>
     </div>
