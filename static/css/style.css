@@ -54,7 +54,7 @@ a:hover {
 .main-header nav {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 }
 .main-header .logo {
     font-size: 1.5rem;
@@ -113,10 +113,9 @@ a:hover {
     padding: 4rem 1rem;
 }
 .welcome-container .icon-large {
-    font-size: 8rem;
-    margin-bottom: 0rem;
+    font-size: 5rem;
+    margin-bottom: 1rem;
 }
-
 .welcome-container h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
@@ -134,29 +133,9 @@ a:hover {
     margin-bottom: 2rem;
 }
 .schedule-header h2 { font-size: 2rem; }
-
 .date-navigation a {
-    /* 原始样式 */
-    /* margin: 0 15px; */ /* 我会调整这个 margin，使其更符合带边框的元素 */
-
-    /* 新增样式，以添加带颜色的框 */
-    display: inline-block; /* 让 padding 和 margin 生效 */
-    padding: 8px 15px;     /* 内边距，让内容与边框有空间 */
-    margin: 0 8px;         /* 调整外边距，使链接之间有合适间距 */
-    border: 1px solid var(--primary-color); /* 使用主题主色作为边框颜色 */
-    border-radius: 5px;    /* 添加圆角，与按钮保持一致 */
-    color: var(--primary-color); /* 链接文字颜色也使用主题主色 */
-    text-decoration: none; /* 移除下划线 */
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s; /* 添加过渡效果 */
+    margin: 0 15px;
 }
-
-.date-navigation a:hover {
-    background-color: var(--primary-color); /* 鼠标悬停时背景变为主题主色 */
-    color: var(--light-color);             /* 文字颜色变为浅色 */
-    border-color: var(--primary-color);    /* 边框颜色保持不变或可调整为更深色 */
-    text-decoration: none; /* 确保悬停时也没有下划线 */
-}
-
 .date-range {
     font-size: 1.1rem;
     color: var(--secondary-color);
@@ -164,19 +143,19 @@ a:hover {
 }
 
 .table-container {
-    overflow-x: auto; /* 关键：在小屏幕上启用水平滚动 */
-    -webkit-overflow-scrolling: touch; /* 改善在iOS上的滚动体验 */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .schedule-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 900px; /* 确保表格不会被过度压缩 */
+    min-width: 900px;
 }
 
 .schedule-table th, .schedule-table td {
     border: 1px solid #ddd;
-    padding: 8px 12px;
+    padding: 4px 8px; /* MODIFIED: Reduced padding for smaller row height */
     text-align: center;
     vertical-align: middle;
     font-size: 0.95rem;
@@ -189,7 +168,7 @@ a:hover {
 }
 
 .schedule-table td {
-    height: 40px;
+    /* REMOVED: height: 40px; */
     cursor: pointer;
     transition: background-color 0.2s;
     word-break: break-all;
@@ -358,17 +337,81 @@ a:hover {
 
     h1 { font-size: 2rem; }
     h2 { font-size: 1.6rem; }
+}
 
-    /* 新增：使后台的行内表单在小屏幕上垂直堆叠 */
-    .inline-form {
-        flex-direction: column; /* 将 flex 布局方向改为垂直 */
-        align-items: stretch;   /* 使子项宽度与容器一致 */
-        width: 100%;            /* 确保表单容器占满可用宽度 */
-    }
+/* --- 公告栏 (首页) --- */
+.notice-board {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.notice-board-title {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: var(--dark-color);
+    font-weight: 500;
+}
+.notice-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.notice-item p {
+    margin: 0;
+    white-space: pre-wrap; /* Preserve line breaks in notice text */
+}
+.notice-item:last-child {
+    margin-bottom: 0;
+}
 
-    .inline-form input,
-    .inline-form button {
-        width: 100%; /* 让输入框和按钮也占满宽度 */
-        margin: 0;   /* 重置可能存在的外边距 */
-    }
+/* --- 公告管理 (后台) --- */
+.notice-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+}
+.notice-form textarea {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+}
+.notice-form input[type="color"] {
+    width: 100px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.notice-item-admin {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+}
+.notice-preview {
+    width: 25px;
+    height: 25px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    flex-shrink: 0;
+}
+.notice-text-admin {
+    flex-grow: 1;
+    word-break: break-all;
+    white-space: pre-wrap;
 }

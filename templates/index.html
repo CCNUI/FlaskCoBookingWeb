@@ -43,6 +43,17 @@
     </table>
 </div>
 
+{% if notices %}
+<div class="notice-board">
+    <h3 class="notice-board-title">公告栏</h3>
+    {% for notice in notices %}
+        <div class="notice-item" style="background-color: {{ notice.color }};">
+            <p>{{ notice.text }}</p>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div id="bookingModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close-button">&times;</span>

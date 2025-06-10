@@ -4,6 +4,7 @@ import sqlite3
 import redis
 import io
 import csv
+import time # Added for unique notice IDs
 from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
@@ -49,7 +50,6 @@ def init_db():
 # --- 数据操作通用函数 (兼容 Redis 和 SQLite) ---
 
 # 系统设置 (特殊日期、时间段)
-DEFAULT_TIME_SLOTS = [f"{h:02d}:{m:02d}-{(h if m==20 else h+1) if (h*60+m+40)<22*60 else h}:{ (m+40)%60 if m==20 else (m+40-60) if m==40 else 20 :02d}" for h in range(6, 22) for m in [0, 40, 20] if h*60+m < 22*60-19]
 DEFAULT_TIME_SLOTS = ["06:00-06:40", "06:40-07:20", "07:20-08:00", "08:00-08:40", "08:40-09:20", "09:20-10:00", "10:00-10:40", "10:40-11:20", "11:20-12:00", "12:00-12:40", "12:40-13:20", "13:20-14:00", "14:00-14:40", "14:40-15:20", "15:20-16:00", "16:00-16:40", "16:40-17:20", "17:20-18:00", "18:00-18:40", "18:40-19:20", "19:20-20:00", "20:00-20:40", "20:40-21:20", "21:20-22:00"]
 
 
@@ -202,6 +202,7 @@ def init_db_command():
     # 初始化默认设置
     save_setting('time_slots', DEFAULT_TIME_SLOTS)
     save_setting('special_dates', {}) # 初始为空
+    save_setting('notices', []) # 初始为空
     os.remove('schema.sql') # 清理
     print('Initialized the database.')
 
@@ -260,8 +261,9 @@ def schedule():
     reservations = get_all_reservations()
     time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
     special_dates = get_setting('special_dates', {})
+    notices = get_setting('notices', [])
 
-    return render_template('index.html', 
+    return render_template('index.html',
                             week_days=week_days,
                             time_slots=time_slots,
                             reservations=reservations,
@@ -269,7 +271,8 @@ def schedule():
                             prev_week_start=prev_week_start.strftime('%Y-%m-%d'),
                             next_week_start=next_week_start.strftime('%Y-%m-%d'),
                             today_start=today.strftime('%Y-%m-%d'),
-                            special_dates=special_dates)
+                            special_dates=special_dates,
+                            notices=notices)
 
 
 @app.route('/submit_reservation', methods=['POST'])
@@ -303,6 +306,7 @@ def submit_reservation():
             return jsonify({"status": "info", "message": "该时段无预约。", "action": "none"})
 
 @app.route('/logs')
+@admin_required
 def logs():
     """操作日志页面"""
     all_logs = get_all_logs()
@@ -325,10 +329,12 @@ def admin_dashboard():
     special_dates = get_setting('special_dates', {})
     sorted_special_dates = sorted(special_dates.items())
     time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
-    return render_template('admin.html', 
-                             logged_in=True, 
+    notices = get_setting('notices', [])
+    return render_template('admin.html',
+                             logged_in=True,
                              special_dates=sorted_special_dates,
-                             time_slots=time_slots)
+                             time_slots=time_slots,
+                             notices=notices)
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -367,6 +373,29 @@ def manage_time_slots():
         save_setting('time_slots', new_time_slots)
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/notices', methods=['POST'])
+@admin_required
+def manage_notices():
+    """管理公告"""
+    form_data = request.form
+    notices = get_setting('notices', [])
+
+    if 'add_notice' in form_data:
+        text = form_data.get('text', '').strip()
+        color = form_data.get('color', '#fff8e1').strip()
+        if text:
+            notice_id = int(time.time() * 1000)
+            notices.append({"id": notice_id, "text": text, "color": color})
+
+    if 'delete_notice' in form_data:
+        notice_id_to_delete = form_data.get('delete_notice_id')
+        if notice_id_to_delete:
+            notices = [n for n in notices if str(n.get('id')) != notice_id_to_delete]
+
+    save_setting('notices', notices)
+    return redirect(url_for('admin_dashboard'))
+
+
 @app.route('/admin/export/csv')
 @admin_required
 def export_data():
@@ -396,7 +425,7 @@ def export_data():
     cw.writerow(['Timestamp (UTC)', 'Action', 'Date', 'Time Slot', 'Old User', 'New User'])
     for log in logs:
         cw.writerow([
-            log.get('timestamp'), log.get('action'), log.get('date'), 
+            log.get('timestamp'), log.get('action'), log.get('date'),
             log.get('time_slot'), log.get('old_user', log.get('old_user_name')), # 兼容两种 key
             log.get('new_user', log.get('new_user_name'))
         ])
