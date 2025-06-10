@@ -26,7 +26,7 @@
             </h3>
             <div class="collapsible-content">
                 <div class="info-box">
-                    <strong>提示:</strong> 添加或删除斋日操作立即生效。
+                    <strong>提示:</strong> 添加或删除斋日操作立即生效，如果更改未生效，请刷新页面后重试。
                 </div>
                 <h4>添加新特殊日期</h4>
                 <form action="{{ url_for('manage_special_dates') }}" method="post" class="inline-form">
@@ -60,7 +60,7 @@
             </h3>
             <div class="collapsible-content">
                 <div class="info-box">
-                    <strong>提示:</strong> 修改或删除时间段列表将可能造成现有记录丢失。请确保格式为 "HH:MM-HH:MM"。
+                    <strong>提示:</strong> 修改或删除时间段列表将可能造成现有记录丢失。提交更改后需要刷新页面后才能再次修改。
                 </div>
                 <form action="{{ url_for('manage_time_slots') }}" method="post" id="timeSlotsForm">
                     <div id="timeSlotsContainer">
