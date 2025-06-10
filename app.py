@@ -311,24 +311,12 @@ def logs():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
-    """管理员登录页面"""
-    admin_password = os.getenv('ADMIN_PASSWORD')
-    if not admin_password:
-        return "错误：管理员密码未在环境变量中设置。", 500
+    """管理员登录页面 - 密码验证已禁用"""
+    # 不进行密码检查，直接授予访问权限并重定向到后台主面板。
+    session['admin_logged_in'] = True
+    session.permanent = True # 使用永久会话
+    return redirect(url_for('admin_dashboard'))
 
-    if request.method == 'POST':
-        password = request.form.get('password')
-        if password == admin_password:
-            session['admin_logged_in'] = True
-            session.permanent = True # 使用永久会话
-            return redirect(url_for('admin_dashboard'))
-        else:
-            return render_template('admin.html', error="密码错误", logged_in=False)
-
-    if 'admin_logged_in' in session:
-        return redirect(url_for('admin_dashboard'))
-
-    return render_template('admin.html', logged_in=False)
 
 @app.route('/admin/dashboard')
 @admin_required
