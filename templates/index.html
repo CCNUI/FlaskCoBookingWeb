@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}预约日历 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="schedule-header">
+    <h2>共修室预约日历</h2>
+    <div class="date-navigation">
+        <a href="{{ url_for('schedule', start_date=prev_week_start) }}">&laquo; 上一周</a>
+        <a href="{{ url_for('schedule') }}">返回本周</a>
+        <a href="{{ url_for('schedule', start_date=next_week_start) }}">下一周 &raquo;</a>
+    </div>
+    <p class="date-range">{{ date_range }}</p>
+</div>
+
+<div class="table-container">
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>时间段</th>
+                {% for day in week_days %}
+                <th class="{% if day.date_str in special_dates %}special-day{% endif %}">
+                    {{ day.display }}<br>{{ day.weekday }}
+                    {% if day.date_str in special_dates %}
+                    <span class="special-day-name">{{ special_dates[day.date_str] }}</span>
+                    {% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in time_slots %}
+            <tr>
+                <td>{{ slot }}</td>
+                {% for day in week_days %}
+                <td data-date="{{ day.date_str }}" data-time-slot="{{ slot }}">
+                    {{ reservations.get(day.date_str, {}).get(slot, '') }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="bookingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>共修室预约</h3>
+        <p><strong>日期:</strong> <span id="modalDate"></span></p>
+        <p><strong>时间:</strong> <span id="modalTimeSlot"></span></p>
+        <p><strong>当前预约人:</strong> <span id="modalCurrentUser">无</span></p>
+        <form id="bookingForm">
+            <input type="hidden" id="modalDateInput" name="date">
+            <input type="hidden" id="modalTimeSlotInput" name="time_slot">
+            <div class="form-group">
+                <label for="nameInput">您的名字:</label>
+                <input type="text" id="nameInput" name="name" placeholder="输入名字以预约或修改" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button-primary">提交</button>
+                <button type="button" id="deleteButton" class="button-danger">删除此预约</button>
+            </div>
+        </form>
+        <div id="modalMessage" class="modal-message"></div>
+    </div>
+</div>
+{% endblock %}

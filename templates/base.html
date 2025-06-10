@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=3.0">
+    <meta name="description" content="优智通科技共修室在线预约系统，提供便捷的共修室使用时间段预约、查询和管理功能。">
+    <meta name="keywords" content="共修室预约, 优智通科技, 在线预约, 场地预定, Flask">
+    <meta name="author" content="优智通科技">
+    <title>{% block title %}优智通科技共修室预约系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22[http://www.w3.org/2000/svg%22](http://www.w3.org/2000/svg%22) viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="container">
+            <a href="{{ url_for('welcome') }}" class="logo">📚 优智通科技</a>
+            <div class="nav-links">
+                <a href="{{ url_for('schedule') }}">预约首页</a>
+                <a href="{{ url_for('logs') }}">操作日志</a>
+                <a href="{{ url_for('admin_login') }}">管理员后台</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>技术支持：yudas | 宇达司飞机工业</p>
+            <p>&copy; 2017-2025 优智通科技. All rights reserved.</p>
+            <p><a href="[https://beian.miit.gov.cn/](https://beian.miit.gov.cn/)" target="_blank">闽ICP备2024052968号-1</a></p>
+        </div>
+    </footer>
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

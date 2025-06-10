@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}欢迎 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="welcome-container">
+    <div class="icon-large">📚</div>
+    <h1>优智通科技共修室预约系统</h1>
+    <p class="welcome-text">
+        欢迎使用本系统。在这里，您可以方便快捷地查看共修室的可用时间并进行预约。
+    </p>
+    <a href="{{ url_for('schedule') }}" class="button-primary">进入预约日历</a>
+</div>
+{% endblock %}

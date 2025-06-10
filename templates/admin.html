@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}管理员后台 - {{ super() }}{% endblock %}
+
+{% block content %}
+<h2>管理员后台</h2>
+
+{% if not logged_in %}
+    <form action="{{ url_for('admin_login') }}" method="post" class="admin-form">
+        <h3>管理员登录</h3>
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+        <div class="form-group">
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="button-primary">登录</button>
+    </form>
+{% else %}
+    <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}">退出登录</a></p>
+    <div class="admin-panel">
+        <div class="admin-section">
+            <h3 class="collapsible">特殊日期管理 (斋日等)
+                <span class="toggle-icon">-</span>
+            </h3>
+            <div class="collapsible-content">
+                <div class="info-box">
+                    <strong>提示:</strong> 添加或删除特殊日期会立即生效，并影响预约日历的显示。
+                </div>
+                <h4>添加新特殊日期</h4>
+                <form action="{{ url_for('manage_special_dates') }}" method="post" class="inline-form">
+                    <input type="date" name="date" required>
+                    <input type="text" name="name" placeholder="名称 (如: 斋日)" value="斋日" required>
+                    <button type="submit" name="add_date" class="button-primary">添加</button>
+                </form>
+
+                <h4>现有特殊日期</h4>
+                {% if special_dates %}
+                <ul class="item-list">
+                    {% for date, name in special_dates %}
+                    <li>
+                        <span>{{ date }} ({{ name }})</span>
+                        <form action="{{ url_for('manage_special_dates') }}" method="post" class="delete-form">
+                             <input type="hidden" name="delete_date" value="{{ date }}">
+                             <button type="submit" class="button-danger">删除</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>当前没有设置特殊日期。</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="admin-section">
+             <h3 class="collapsible">预约时间段管理
+                <span class="toggle-icon">-</span>
+            </h3>
+            <div class="collapsible-content">
+                <div class="info-box">
+                    <strong>提示:</strong> 修改时间段列表将立即改变预约日历的行结构。请确保格式为 "HH:MM-HH:MM"。
+                </div>
+                <form action="{{ url_for('manage_time_slots') }}" method="post" id="timeSlotsForm">
+                    <div id="timeSlotsContainer">
+                        {% for slot in time_slots %}
+                        <div class="time-slot-item">
+                            <input type="text" name="time_slot" value="{{ slot }}" placeholder="HH:MM-HH:MM" required>
+                            <button type="button" class="button-danger remove-slot-btn">删除</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" id="addSlotBtn" class="button-secondary">添加一个时间段</button>
+                    <button type="submit" class="button-primary">保存所有时间段</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">数据管理
+                <span class="toggle-icon">-</span>
+            </h3>
+            <div class="collapsible-content">
+                <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
+                <a href="{{ url_for('export_data') }}" class="button-primary">导出为 .CSV 文件</a>
+            </div>
+        </div>
+    </div>
+
+{% endif %}
+{% endblock %}

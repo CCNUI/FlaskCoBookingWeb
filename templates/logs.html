@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}操作日志 - {{ super() }}{% endblock %}
+
+{% block content %}
+<h2>操作日志</h2>
+<p>这里记录了最近的 200 条预约变更历史。</p>
+<div class="table-container">
+    <table class="logs-table">
+        <thead>
+            <tr>
+                <th>时间戳 (UTC)</th>
+                <th>操作</th>
+                <th>日期</th>
+                <th>时间段</th>
+                <th>原预约人</th>
+                <th>新预约人</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr class="log-{{ log.action }}">
+                <td>{{ log.timestamp }}</td>
+                <td>
+                    {% if log.action == 'create' %}创建
+                    {% elif log.action == 'update' %}更新
+                    {% elif log.action == 'delete' %}删除
+                    {% else %}{{ log.action }}
+                    {% endif %}
+                </td>
+                <td>{{ log.date }}</td>
+                <td>{{ log.time_slot }}</td>
+                <td>{{ log.old_user_name or '无' }}</td>
+                <td>{{ log.new_user_name or '无' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">暂无任何日志记录。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
