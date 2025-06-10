@@ -32,10 +32,6 @@
                     <form action="{{ url_for('manage_special_dates') }}" method="post" class="inline-form">
                         <input type="date" name="date" required>
                         <input type="text" name="name" placeholder="名称 (如: 斋日)" value="斋日" required>
-                         </form>
-                    <p>
-                    </p>
-                    <form action="{{ url_for('manage_special_dates') }}" method="post" class="inline-form2">
                         <button type="submit" name="add_date" class="button-primary">添加</button>
                     </form>
 
@@ -81,6 +77,15 @@
                 </div>
             </div>
 
+            <div class="admin-section">
+                <h3 class="collapsible">数据管理
+                    <span class="toggle-icon">-</span>
+                </h3>
+                <div class="collapsible-content">
+                    <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
+                    <a href="{{ url_for('export_data') }}" class="button-primary">导出为 .CSV 文件</a>
+                </div>
+            </div>
         </div>
     {% else %}
      <p>您需要先登录才能访问此页面。</p>
