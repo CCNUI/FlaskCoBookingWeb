@@ -28,11 +28,11 @@
 {% else %}
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}" onclick="_hmt.push(['_trackEvent', 'AdminAuth', 'Click', 'Logout']);">(ง •_•)ง</a></p>
 
-    {# 等待修复：显示活跃管理员信息
+{# 显示活跃管理员信息 #}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          {% if category == 'admin_info' %}
+          {% if category == 'admin_info' and message.count > 0 %}
             <div class="admin-info-box">
               <p>
                 <strong>当前在线管理员: {{ message.count }} 位 (按IP统计)</strong>
@@ -47,7 +47,6 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
-    #}
 
     <div class="admin-panel">
         <div class="admin-section">
