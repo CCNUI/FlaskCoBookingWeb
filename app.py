@@ -262,8 +262,7 @@ def init_db_command():
                      ( \
                          key   TEXT PRIMARY KEY, \
                          value TEXT NOT NULL
-                     ); \
-                     """
+                     );                      """
     with open('schema.sql', 'w', encoding='utf-8') as f:
         f.write(schema_content)
 
@@ -272,7 +271,7 @@ def init_db_command():
     save_setting('time_slots', DEFAULT_TIME_SLOTS)
     save_setting('special_dates', {})  # 初始为空
     save_setting('notices', [])  # 初始为空
-    save_setting('table_layout', 'fixed')  # 新增：表格布局默认为 'fixed'
+    # 移除：不再需要 table_layout 设置
     os.remove('schema.sql')  # 清理
     print('Initialized the database.')
 
@@ -346,14 +345,18 @@ def get_schedule_data(start_date_str):
     next_week_start = start_of_week + timedelta(days=7)
 
     week_days = []
-    week_day_names = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+    # 修改：使用缩写的星期名，并生成缩写日期字符串
+    week_day_abbrs = ["一", "二", "三", "四", "五", "六", "日"]
     for i in range(7):
         current_day = start_of_week + timedelta(days=i)
+        # 生成缩写格式，例如 "6.9周一"
+        abbr_display_str = f"{current_day.month}.{current_day.day}周{week_day_abbrs[i]}"
         week_days.append({
             "date_obj": current_day,
             "date_str": current_day.strftime('%Y-%m-%d'),
             "display": current_day.strftime('%m月%d日'),
-            "weekday": week_day_names[i]
+            "weekday": f"星期{week_day_abbrs[i]}",  # 完整的星期名
+            "abbr_display": abbr_display_str  # 新增的缩写名
         })
 
     date_range_str = f"{week_days[0]['display']} ({week_days[0]['weekday']}) - {week_days[-1]['display']} ({week_days[-1]['weekday']})"
@@ -381,7 +384,7 @@ def schedule():
     """主预约日历视图"""
     start_date_str = request.args.get('start_date')
     context = get_schedule_data(start_date_str)
-    context['table_layout'] = get_setting('table_layout', 'fixed')
+    # 移除：不再需要传递 table_layout
     return render_template('index.html', **context)
 
 
@@ -482,13 +485,11 @@ def admin_dashboard():
     sorted_special_dates = sorted(special_dates.items())
     time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
     notices = get_setting('notices', [])
-    table_layout = get_setting('table_layout', 'fixed')  # 获取表格布局设置
     return render_template('admin.html',
                            logged_in=True,
                            special_dates=sorted_special_dates,
                            time_slots=time_slots,
-                           notices=notices,
-                           table_layout=table_layout)  # 传递给模板
+                           notices=notices)
 
 
 @app.route('/admin/logout')
@@ -536,18 +537,7 @@ def manage_time_slots():
     return redirect(url_for('admin_dashboard'))
 
 
-@app.route('/admin/table_layout', methods=['POST'])
-@admin_required
-def manage_table_layout():
-    """管理表格布局模式"""
-    layout_mode = request.form.get('table_layout', 'fixed')
-    if layout_mode in ['fixed', 'auto']:
-        save_setting('table_layout', layout_mode)
-        flash('表格布局设置已保存。', 'info')
-    else:
-        flash('无效的布局设置。', 'error')
-    return redirect(url_for('admin_dashboard'))
-
+# 移除：不再需要 manage_table_layout 路由
 
 @app.route('/admin/notices', methods=['POST'])
 @admin_required

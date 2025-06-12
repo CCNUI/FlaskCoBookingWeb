@@ -7,10 +7,11 @@
 
 {# 新增的服务器更新公告板块 #}
 <div class="flash-info" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
-    <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 28.0)</h4>
+    <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 29.0)</h4>
     <ul style="margin-bottom: 0; padding-left: 20px;">
-        <li><b>表格功能增强：</b>主页表格现已支持首行首列固定、二指缩放，并可在后台设置列宽模式。</li>
-        <li><b>实验性界面：</b>新增“复制粘贴”和“整页截图”两种实验性表格界面，提供更灵活的操作方式。</li>
+        <li><b>表格功能增强：</b>主页表格现已进行首行首列固定、支持二指缩放。</li>
+        <li><b>移动端优化：</b>进一步压缩了移动端表格的行距和边距，使其更加紧凑。</li>
+        <li><b>内测-实验性界面：</b>新增“复制粘贴”和“整页截图”两种实验性表格界面，提供更灵活的操作方式。</li>
     </ul>
 </div>
 {# 公告板块结束 #}
@@ -25,7 +26,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-                {% if category != 'danger' and category != 'admin_info' %} {# 避免重复显示服务器过期提醒和管理员信息 #}
+                {% if category != 'danger' and category != 'admin_info' %} {# 排除特殊的admin_info消息 #}
                  <div class="flash-{{ category }}">{{ message }}</div>
                 {% endif %}
             {% endfor %}
@@ -118,30 +119,6 @@
                     {% endfor %}
                 </ul>
                 {% else %}<p>当前没有设置公告。</p>{% endif %}
-            </div>
-        </div>
-
-        <div class="admin-section">
-            <h3 class="collapsible">表格列宽设置 <span class="toggle-icon">【单击进入】</span></h3>
-            <div class="collapsible-content" style="display:none;">
-                <div class="info-box"><strong>提示:</strong> 此设置影响主预约日历的显示方式。<br>
-                    - <b>固定宽度：</b>在所有设备上保持统一的列宽，超出部分可水平滚动。适合内容较多的情况。<br>
-                    - <b>自动宽度：</b>当浏览器窗口足够宽时，列宽自动适应内容；窗口较窄时，列宽会缩小以容纳更多列。
-                </div>
-                <form action="{{ url_for('manage_table_layout') }}" method="post">
-                    <div class="form-group">
-                        <label style="margin-bottom: 10px;">请选择表格列宽模式:</label>
-                        <label style="font-weight: normal; display: block; margin-bottom: 5px;">
-                            <input type="radio" name="table_layout" value="fixed" {% if table_layout == 'fixed' %}checked{% endif %}>
-                            固定宽度 (推荐)
-                        </label>
-                        <label style="font-weight: normal; display: block;">
-                            <input type="radio" name="table_layout" value="auto" {% if table_layout == 'auto' %}checked{% endif %}>
-                            自动宽度
-                        </label>
-                    </div>
-                    <button type="submit" class="button-primary">保存设置</button>
-                </form>
             </div>
         </div>
 

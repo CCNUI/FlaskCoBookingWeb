@@ -23,8 +23,8 @@
             <tr>
                 <th class="sticky-header">时间段</th>
                 {% for day in week_days %}
-                <th class="sticky-header {% if day.date_str in special_dates %}special-day{% endif %}">
-                    {{ day.display }}<br>{{ day.weekday }}
+                <th class="sticky-header {% if day.date_str in special_dates %}special-day{% endif %}" data-abbr-date="{{ day.abbr_display }}">
+                    <span class="full-date-display">{{ day.display }}<br>{{ day.weekday }}</span>
                     {% if day.date_str in special_dates %}
                     <span class="special-day-name">{{ special_dates[day.date_str] }}</span>
                     {% endif %}

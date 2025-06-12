@@ -144,29 +144,19 @@ a:hover {
 }
 
 .table-container {
-    overflow: auto; /* 改为auto以同时支持水平和垂直滚动 */
-    max-height: 70vh; /* 限制最大高度以触发垂直滚动 */
+    overflow: auto;
+    max-height: 70vh;
     -webkit-overflow-scrolling: touch;
     border: 1px solid #ddd;
 }
 
 .schedule-table {
     width: 100%;
-    border-collapse: separate; /* 改为 separate 以支持 sticky */
+    border-collapse: separate;
     border-spacing: 0;
-}
-
-/* 新增：表格布局样式 */
-.table-layout-fixed .schedule-table {
-    table-layout: fixed; /* 固定宽度模式 */
+    /* 桌面端默认使用固定布局，确保列宽稳定 */
+    table-layout: fixed;
     min-width: 900px;
-}
-.table-layout-auto .schedule-table {
-    table-layout: auto; /* 自动宽度模式 */
-    width: auto;
-}
-.table-layout-auto .schedule-table th, .table-layout-auto .schedule-table td {
-    white-space: nowrap; /* 防止自动模式下文字换行 */
 }
 
 .schedule-table th, .schedule-table td {
@@ -182,22 +172,21 @@ a:hover {
     font-weight: normal;
 }
 
-/* 新增：固定行列的核心样式 */
+/* 固定行列的核心样式 */
 .sticky-header {
     position: -webkit-sticky;
     position: sticky;
     top: 0;
     z-index: 2;
-    background-color: var(--light-color); /* 必须设置背景色 */
+    background-color: var(--light-color);
 }
 .sticky-column {
     position: -webkit-sticky;
     position: sticky;
     left: 0;
     z-index: 1;
-    background-color: #ffffff; /* 必须设置背景色 */
+    background-color: #ffffff;
 }
-/* 左上角固定的单元格需要更高的z-index */
 thead th.sticky-header:first-child {
     left: 0;
     z-index: 3;
@@ -366,15 +355,35 @@ thead th.sticky-header:first-child {
     }
     .main-header .nav-links a { margin-left: 0; }
 
-    .table-layout-fixed .schedule-table th,
-    .table-layout-fixed .schedule-table td {
-        padding: 6px 8px;
-        font-size: 0.85rem;
-        min-width: 100px;
+    /* 移动端，表格布局变为自动，以更好地适应屏幕 */
+    .schedule-table {
+        table-layout: auto;
+        min-width: 100%;
+    }
+
+    /* 更积极地压缩表格以适应移动端 */
+    .schedule-table th,
+    .schedule-table td {
+        padding: 2px 0; /* 极大减小行高和边距 */
+        font-size: 0.8rem;
+        line-height: 1.3; /* 压缩行高 */
+        white-space: nowrap; /* 防止内容换行，配合 auto 布局 */
     }
 
     h1 { font-size: 2rem; }
     h2 { font-size: 1.6rem; }
+
+    /* 移动端表头缩写样式 */
+    .schedule-table th .full-date-display {
+        display: none;
+    }
+
+    .schedule-table th[data-abbr-date]::before {
+        content: attr(data-abbr-date);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 2px;
+    }
 }
 
 /* --- 公告栏 (首页) --- */
@@ -401,7 +410,7 @@ thead th.sticky-header:first-child {
 }
 .notice-item p {
     margin: 0;
-    white-space: pre-wrap; /* Preserve line breaks in notice text */
+    white-space: pre-wrap;
 }
 .notice-item:last-child {
     margin-bottom: 0;
