@@ -96,6 +96,14 @@
             </div>
         </div>
 
+        <div class="admin-section">
+            <h3 class="collapsible">数据管理 <span class="toggle-icon">【双击进入】</span></h3>
+            <div class="collapsible-content" style="display:none;">
+                <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
+                <a href="{{ url_for('export_data') }}" class="button-primary" onclick="_hmt.push(['_trackEvent', 'AdminPanel', 'Data', 'Export CSV Click']);">导出为 .CSV 文件</a>
+            </div>
+        </div>
+
     </div>
 
 {% endif %}

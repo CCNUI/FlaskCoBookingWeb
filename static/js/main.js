@@ -23,9 +23,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modalDateInput').value = date;
             document.getElementById('modalTimeSlotInput').value = timeSlot;
 
-            // 如果没有预约人，禁用删除按钮
             deleteButton.disabled = !currentUser;
             document.getElementById('modalMessage').textContent = '';
+
+            // 跟踪事件：打开预约弹窗
+            _hmt.push(['_trackEvent', 'ReservationModal', 'Action', 'Open']);
 
             bookingModal.style.display = 'flex';
             document.getElementById('nameInput').focus();
@@ -41,6 +43,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scheduleTable) {
             scheduleTable.addEventListener('click', (event) => {
                 if (event.target.tagName === 'TD' && event.target.dataset.date) {
+                    // 跟踪事件：点击日历单元格
+                    _hmt.push(['_trackEvent', 'Calendar', 'Click', 'Cell']);
                     openModal(event.target);
                 }
             });
@@ -48,12 +52,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 关闭按钮
         if (closeModalButton) {
-            closeModalButton.addEventListener('click', closeModal);
+            closeModalButton.addEventListener('click', () => {
+                // 跟踪事件：点击关闭按钮
+                _hmt.push(['_trackEvent', 'ReservationModal', 'Action', 'Close by Button']);
+                closeModal();
+            });
         }
 
         // 点击模态框外部关闭
         window.addEventListener('click', (event) => {
             if (event.target === bookingModal) {
+                // 跟踪事件：点击弹窗外部区域关闭
+                _hmt.push(['_trackEvent', 'ReservationModal', 'Action', 'Close by Outside Click']);
                 closeModal();
             }
         });
@@ -62,6 +72,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (bookingForm) {
             bookingForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                // 跟踪事件：点击“提交”按钮
+                _hmt.push(['_trackEvent', 'ReservationModal', 'Click', 'Submit Button']);
                 await submitReservation();
             });
         }
@@ -69,7 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // 删除按钮
         if (deleteButton) {
             deleteButton.addEventListener('click', async () => {
-                // 清空输入框并提交，等同于删除
+                // 跟踪事件：点击“删除此预约”按钮
+                _hmt.push(['_trackEvent', 'ReservationModal', 'Click', 'Delete Button']);
                 document.getElementById('nameInput').value = '';
                 await submitReservation();
             });
@@ -87,25 +100,28 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/submit_reservation', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
 
                 const result = await response.json();
-
                 const modalMessage = document.getElementById('modalMessage');
                 modalMessage.textContent = result.message;
                 modalMessage.className = `modal-message ${result.status}`;
 
                 if (result.status === 'success') {
+                    // 根据操作类型，分别跟踪创建、更新、删除的成功事件
+                    if (result.action === 'create') {
+                        _hmt.push(['_trackEvent', 'ReservationAPI', 'Submit', 'Create Success']);
+                    } else if (result.action === 'update') {
+                        _hmt.push(['_trackEvent', 'ReservationAPI', 'Submit', 'Update Success']);
+                    } else if (result.action === 'delete') {
+                        _hmt.push(['_trackEvent', 'ReservationAPI', 'Submit', 'Delete Success']);
+                    }
                     activeCell.textContent = result.new_user;
-                    setTimeout(closeModal, 1000); // 成功后延迟1秒关闭
+                    setTimeout(closeModal, 1000);
                 } else if (result.status === 'info') {
                      setTimeout(closeModal, 1000);
                 }
@@ -113,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Error submitting reservation:', error);
                 document.getElementById('modalMessage').textContent = '发生网络错误，请稍后重试。';
+                // 跟踪事件：提交时发生网络或服务器错误
+                _hmt.push(['_trackEvent', 'ReservationAPI', 'Submit', 'Error']);
             }
         };
     }
@@ -122,26 +140,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // 折叠面板
     const collapsibles = document.querySelectorAll('.collapsible');
     collapsibles.forEach(button => {
-        button.addEventListener('click', function() {
-            this.classList.toggle('active');
+        button.addEventListener('dblclick', function() { // 改为双击触发
             const content = this.nextElementSibling;
-            const icon = this.querySelector('.toggle-icon');
-            if (content.style.display === 'block' || content.style.display === '') {
+            const panelTitle = this.innerText.split('\n')[0].trim(); // 获取面板标题
+
+            if (content.style.display === 'block') {
                 content.style.display = 'none';
-                icon.textContent = '+';
+                 // 跟踪事件：折叠面板
+                _hmt.push(['_trackEvent', 'AdminPanel', 'Toggle', `Collapse - ${panelTitle}`]);
             } else {
                 content.style.display = 'block';
-                icon.textContent = '-';
+                 // 跟踪事件：展开面板
+                _hmt.push(['_trackEvent', 'AdminPanel', 'Toggle', `Expand - ${panelTitle}`]);
             }
         });
     });
 
-    // 删除特殊日期二次确认
+    // 删除项二次确认
     const deleteForms = document.querySelectorAll('.delete-form');
     deleteForms.forEach(form => {
         form.addEventListener('submit', function(event) {
-            if (!confirm('您确定要删除此项吗？此操作不可撤销。')) {
+            const confirmed = confirm('您确定要删除此项吗？此操作不可撤销。');
+            if (!confirmed) {
+                // 跟踪事件：取消删除
+                _hmt.push(['_trackEvent', 'AdminPanel', 'Confirmation', 'Delete Canceled']);
                 event.preventDefault();
+            } else {
+                // 跟踪事件：确认删除
+                _hmt.push(['_trackEvent', 'AdminPanel', 'Confirmation', 'Delete Confirmed']);
             }
         });
     });
@@ -150,6 +176,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const timeSlotsContainer = document.getElementById('timeSlotsContainer');
     if (timeSlotsContainer) {
         document.getElementById('addSlotBtn').addEventListener('click', () => {
+            // 跟踪事件：后台-添加时间段字段
+            _hmt.push(['_trackEvent', 'AdminPanel', 'TimeSlots', 'Add Field']);
             const newItem = document.createElement('div');
             newItem.className = 'time-slot-item';
             newItem.innerHTML = `
@@ -161,6 +189,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         timeSlotsContainer.addEventListener('click', (event) => {
             if (event.target.classList.contains('remove-slot-btn')) {
+                // 跟踪事件：后台-删除时间段字段
+                _hmt.push(['_trackEvent', 'AdminPanel', 'TimeSlots', 'Remove Field']);
                 event.target.parentElement.remove();
             }
         });

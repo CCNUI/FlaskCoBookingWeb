@@ -25,10 +25,11 @@
 <body>
     <header class="main-header">
         <nav class="container">
-            <a href="{{ url_for('welcome') }}" class="logo" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header UZT Logo']);">📚 优智通科技</a>
+            <a href="{{ url_for('welcome') }}" class="logo" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header Logo']);">📚 优智通科技</a>
             <div class="nav-links">
-                <a href="{{ url_for('welcome') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header BacktoIndex Link']);">预约首页</a>
-                <a href="{{ url_for('admin_login') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header Admin Link']);">管理员后台</a>
+                <a href="{{ url_for('schedule') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Schedule Link']);">预约首页</a>
+                <a href="{{ url_for('logs') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Logs Link']);">操作日志</a>
+                <a href="{{ url_for('admin_login') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Admin Link']);">管理员后台</a>
             </div>
         </nav>
     </header>

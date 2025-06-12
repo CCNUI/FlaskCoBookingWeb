@@ -10,9 +10,9 @@
 <div class="schedule-header">
     <h2> 密行组早课念佛排麦表</h2>
     <div class="date-navigation">
-        <a href="{{ url_for('schedule', start_date=prev_week_start) }}">&laquo; 上一周</a>
-        <a href="{{ url_for('schedule') }}">返回本周</a>
-        <a href="{{ url_for('schedule', start_date=next_week_start) }}">下一周 &raquo;</a>
+        <a href="{{ url_for('schedule', start_date=prev_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Previous Week']);">&laquo; 上一周</a>
+        <a href="{{ url_for('schedule') }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'This Week']);">返回本周</a>
+        <a href="{{ url_for('schedule', start_date=next_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Next Week']);">下一周 &raquo;</a>
     </div>
     <p class="date-range">{{ date_range }}</p>
 </div>
