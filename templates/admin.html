@@ -5,6 +5,16 @@
 {% block content %}
 <h2>管理员后台</h2>
 
+{# 新增的服务器更新公告板块 #}
+<div class="flash-info" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
+    <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 27.1)</h4>
+    <ul style="margin-bottom: 0; padding-left: 20px;">
+        <li><b>公告管理增强：</b>现已支持直接“编辑”现有公告的内容和背景颜色。</li>
+    </ul>
+</div>
+{# 公告板块结束 #}
+
+
 {% if not logged_in %}
     {# 登录表单部分 #}
     <form action="{{ url_for('admin_login') }}" method="post" class="admin-form" onsubmit="_hmt.push(['_trackEvent', 'AdminAuth', 'Submit', 'Login Attempt']);">
@@ -14,7 +24,9 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-              <div class="flash-{{ category }}">{{ message }}</div>
+                {% if category != 'danger' %} {# 避免重复显示服务器过期提醒 #}
+                 <div class="flash-{{ category }}">{{ message }}</div>
+                {% endif %}
             {% endfor %}
           {% endif %}
         {% endwith %}
@@ -27,26 +39,6 @@
     </form>
 {% else %}
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}" onclick="_hmt.push(['_trackEvent', 'AdminAuth', 'Click', 'Logout']);">(ง •_•)ง</a></p>
-
-{# 显示活跃管理员信息 #}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          {% if category == 'admin_info' and message.count > 0 %}
-            <div class="admin-info-box">
-              <p>
-                <strong>当前在线管理员: {{ message.count }} 位 (按IP统计)</strong>
-              </p>
-              <ul>
-                {% for sess in message.sessions %}
-                  <li>IP: {{ sess.ip }} | 区域: {{ sess.region }} | 登录时间: {{ sess.login_time }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-          {% endif %}
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
 
     <div class="admin-panel">
         <div class="admin-section">
@@ -99,7 +91,7 @@
         <div class="admin-section">
             <h3 class="collapsible">公告管理 <span class="toggle-icon">【单击进入】</span></h3>
             <div class="collapsible-content" style="display:none;">
-                <div class="info-box"><strong>提示:</strong> 在此添加、删除公告。公告将显示在预约日历下方。</div>
+                <div class="info-box"><strong>提示:</strong> 在此添加、修改、删除公告。公告将显示在预约日历下方。</div>
                 <h4>添加新公告</h4>
                 <form action="{{ url_for('manage_notices') }}" method="post" class="notice-form" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'Notices', 'Add Submit']);">
                     <div class="form-group"><label for="notice-text">公告内容:</label><textarea id="notice-text" name="text" rows="3" required></textarea></div>
@@ -114,10 +106,13 @@
                     <li class="notice-item-admin">
                         <div class="notice-preview" style="background-color: {{ notice.color }};"></div>
                         <span class="notice-text-admin">{{ notice.text }}</span>
-                        <form action="{{ url_for('manage_notices') }}" method="post" class="delete-form" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'Notices', 'Delete Submit']);">
-                             <input type="hidden" name="delete_notice_id" value="{{ notice.id }}">
-                             <button type="submit" name="delete_notice" class="button-danger">删除</button>
-                        </form>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                            <a href="{{ url_for('edit_notice', notice_id=notice.id) }}" class="button-secondary" style="padding: 5px 10px; text-decoration: none;">编辑</a>
+                            <form action="{{ url_for('manage_notices') }}" method="post" class="delete-form" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'Notices', 'Delete Submit']);">
+                                 <input type="hidden" name="delete_notice_id" value="{{ notice.id }}">
+                                 <button type="submit" name="delete_notice" class="button-danger" style="padding: 5px 10px;">删除</button>
+                            </form>
+                        </div>
                     </li>
                     {% endfor %}
                 </ul>
@@ -125,13 +120,15 @@
             </div>
         </div>
 
+        {% if feature_flags.export_csv %}
         <div class="admin-section">
-            <h3 class="collapsible">数据管理 <span class="toggle-icon">【双击进入】</span></h3>
+            <h3 class="collapsible">数据管理 <span class="toggle-icon">【单击进入】</span></h3>
             <div class="collapsible-content" style="display:none;">
                 <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
                 <a href="{{ url_for('export_data') }}" class="button-primary" onclick="_hmt.push(['_trackEvent', 'AdminPanel', 'Data', 'Export CSV Click']);">导出为 .CSV 文件</a>
             </div>
         </div>
+        {% endif %}
 
     </div>
 

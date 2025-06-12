@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}编辑公告 - {{ super() }}{% endblock %}
+
+{% block content %}
+<h2>编辑公告</h2>
+
+<form action="{{ url_for('edit_notice', notice_id=notice.id) }}" method="post" class="admin-form">
+    <div class="info-box">
+        <strong>提示:</strong> 修改公告内容和背景颜色，然后点击“保存更改”。
+    </div>
+
+    <div class="form-group">
+        <label for="notice-text">公告内容:</label>
+        <textarea id="notice-text" name="text" rows="4" class="form-control" required>{{ notice.text }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="notice-color">背景颜色:</label>
+        <input type="color" id="notice-color" name="color" value="{{ notice.color }}">
+    </div>
+
+    <div class="form-actions" style="justify-content: flex-start; gap: 15px;">
+        <button type="submit" class="button-primary">保存更改</button>
+        <a href="{{ url_for('admin_dashboard') }}" class="button-secondary" style="text-decoration: none;">取消</a>
+    </div>
+</form>
+{% endblock %}

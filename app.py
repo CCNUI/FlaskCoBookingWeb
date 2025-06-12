@@ -9,15 +9,35 @@ import uuid  # 导入 uuid 模块
 import requests  # 导入 requests 模块
 from datetime import datetime, date, timedelta
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response, flash, abort
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__, instance_relative_config=True)
-# 注意：SECRET_KEY 对于安全的 session至关重要
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # 设置 session 有效期为60分钟
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)
+
+# --- 功能开关 & 过期提醒设置 ---
+# 从 .env 读取配置, 如果未设置则默认为 'false'
+ENABLE_EXPORT_CSV = os.getenv('ENABLE_EXPORT_CSV', 'false').lower() == 'true'
+ENABLE_ACCESS_LOG = os.getenv('ENABLE_ACCESS_LOG', 'false').lower() == 'true'
+EXPIRATION_DATE_STR = os.getenv('EXPIRATION_DATE')
+EXPIRATION_DATE = None
+
+print("--- 优智通科技共修室预约系统 ---")
+print(f"[*] 导出CSV功能: {'已启用' if ENABLE_EXPORT_CSV else '已禁用'}")
+print(f"[*] 访问日志功能: {'已启用' if ENABLE_ACCESS_LOG else '已禁用'}")
+
+if EXPIRATION_DATE_STR:
+    try:
+        EXPIRATION_DATE = datetime.strptime(EXPIRATION_DATE_STR, '%Y-%m-%d').date()
+        print(f"[*] 服务器过期提醒: 已启用 (过期日期: {EXPIRATION_DATE_STR})")
+    except ValueError:
+        print(f"[错误] EXPIRATION_DATE 格式无效: '{EXPIRATION_DATE_STR}'. 正确格式为 YYYY-MM-DD。提醒功能已禁用。")
+else:
+    print("[*] 服务器过期提醒: 已禁用 (未设置 EXPIRATION_DATE)")
+print("---------------------------------")
 
 # --- 数据库抽象层 ---
 # 根据环境变量判断使用 Vercel KV (Redis) 还是 SQLite
@@ -37,6 +57,30 @@ else:
     if not os.path.exists(app.instance_path):
         os.makedirs(app.instance_path)
     app.config['DATABASE'] = os.path.join(app.instance_path, 'reservations.sqlite')
+
+
+# --- 上下文处理器, 向所有模板注入变量 ---
+@app.context_processor
+def inject_global_vars():
+    feature_flags = {
+        'export_csv': ENABLE_EXPORT_CSV,
+        'access_log': ENABLE_ACCESS_LOG
+    }
+
+    # 检查服务器是否即将过期
+    if EXPIRATION_DATE:
+        today = date.today()
+        # 提前14天开始提醒
+        reminder_start_date = EXPIRATION_DATE - timedelta(days=14)
+        if reminder_start_date <= today <= EXPIRATION_DATE:
+            days_left = (EXPIRATION_DATE - today).days
+            if days_left > 0:
+                message = f"重要提醒：服务器将于 {EXPIRATION_DATE.strftime('%Y-%m-%d')} ({days_left}天后) 过期，请及时续费！"
+            else:
+                message = f"重要提醒：服务器已于 {EXPIRATION_DATE.strftime('%Y-%m-%d')} 过期，请提醒站长 @榕缘 进行续费~"
+            flash(message, 'danger')
+
+    return dict(feature_flags=feature_flags)
 
 
 # --- SQLite 辅助函数 ---
@@ -379,6 +423,8 @@ def submit_reservation():
 @admin_required
 def logs():
     """操作日志页面"""
+    if not ENABLE_ACCESS_LOG:
+        abort(404)
     all_logs = get_all_logs()
     return render_template('logs.html', logs=all_logs)
 
@@ -388,7 +434,8 @@ def admin_login():
     """管理员登录页面 - 实现多管理员会话管理"""
     admin_password = os.getenv('ADMIN_PASSWORD')
     if not admin_password:
-        return "错误：管理员密码未在环境变量中设置。", 500
+        flash("错误：管理员密码未在环境变量中设置。", "danger")
+        return render_template('admin.html', logged_in=False)
 
     if request.method == 'POST':
         password = request.form.get('password')
@@ -493,7 +540,7 @@ def manage_time_slots():
 @app.route('/admin/notices', methods=['POST'])
 @admin_required
 def manage_notices():
-    """管理公告"""
+    """管理公告 (添加/删除)"""
     form_data = request.form
     notices = get_setting('notices', [])
 
@@ -513,10 +560,42 @@ def manage_notices():
     return redirect(url_for('admin_dashboard'))
 
 
+@app.route('/admin/edit_notice/<int:notice_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_notice(notice_id):
+    """编辑指定的公告"""
+    notices = get_setting('notices', [])
+    notice_to_edit = None
+    for n in notices:
+        if n.get('id') == notice_id:
+            notice_to_edit = n
+            break
+
+    if not notice_to_edit:
+        abort(404)
+
+    if request.method == 'POST':
+        text = request.form.get('text', '').strip()
+        color = request.form.get('color', '#fff8e1').strip()
+        if text:
+            notice_to_edit['text'] = text
+            notice_to_edit['color'] = color
+            save_setting('notices', notices)
+            flash('公告已成功更新。', 'info')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('公告内容不能为空。', 'error')
+
+    return render_template('edit_notice.html', notice=notice_to_edit, logged_in=True)
+
+
 @app.route('/admin/export/csv')
 @admin_required
 def export_data():
     """导出所有预约和日志数据为 CSV"""
+    if not ENABLE_EXPORT_CSV:
+        abort(404)
+
     # 1. 获取数据
     reservations = get_all_reservations()
     logs = get_all_logs(limit=10000)  # 导出时获取更多日志
@@ -555,6 +634,17 @@ def export_data():
         mimetype="text/csv",
         headers={"Content-disposition":
                      f"attachment; filename=youtong_booking_export_{datetime.utcnow().strftime('%Y%m%d')}.csv"})
+
+
+# --- 错误处理 ---
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', error_code=404, error_message='您访问的页面不存在'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('error.html', error_code=500, error_message='服务器发生内部错误'), 500
 
 
 if __name__ == '__main__':

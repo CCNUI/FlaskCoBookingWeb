@@ -7,7 +7,7 @@
     <meta name="description" content="优智通科技共修室在线预约系统，提供便捷的共修室使用时间段预约、查询和管理功能。">
     {% endblock %}
     <title>{% block title %}优智通科技共修室预约系统{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.8">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
     <link rel="canonical" href="{{ request.url_root.rstrip('/') + request.path }}">
 
@@ -28,12 +28,26 @@
             <a href="{{ url_for('welcome') }}" class="logo" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header UZT Logo']);">📚 优智通科技</a>
             <div class="nav-links">
                 <a href="{{ url_for('welcome') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header BacktoIndex Link']);">预约首页</a>
+                {% if feature_flags.access_log %}
+                <a href="{{ url_for('logs') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header Logs Link']);">操作日志</a>
+                {% endif %}
                 <a href="{{ url_for('admin_login') }}" onclick="_hmt.push(['_trackEvent', 'Navigation', 'Click', 'Header Admin Link']);">管理员后台</a>
             </div>
         </nav>
     </header>
 
     <main class="container">
+        {# 全局消息显示区域 #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if category != 'admin_info' %} {# 排除特殊的admin_info消息 #}
+                <div class="flash-{{ category }}">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
 

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}错误 - {{ super() }}{% endblock %}
+
+{% block meta_description %}
+<meta name="description" content="系统发生错误，页面将在5秒后自动跳转回首页。">
+{% endblock %}
+
+{% block content %}
+<div class="welcome-container" style="text-align: center; padding: 4rem 1rem;">
+    <div class="icon-large" style="font-size: 5rem; margin-bottom: 1rem;">
+        {% if error_code == 404 %}
+        😕
+        {% else %}
+        💥
+        {% endif %}
+    </div>
+    
+    <h1>发生错误 ({{ error_code }})</h1>
+    
+    <p class="welcome-text">
+        {{ error_message }}.
+        <br>
+        系统将在 5 秒后自动跳转到首页。
+    </p>
+
+    <a href="{{ url_for('welcome') }}" class="button-primary">立即返回首页</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# 使用JS实现5秒后跳转 #}
+<script>
+    setTimeout(function() {
+        window.location.href = "{{ url_for('welcome') }}";
+    }, 5000);
+</script>
+{% endblock %}
