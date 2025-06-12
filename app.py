@@ -272,6 +272,7 @@ def init_db_command():
     save_setting('time_slots', DEFAULT_TIME_SLOTS)
     save_setting('special_dates', {})  # 初始为空
     save_setting('notices', [])  # 初始为空
+    save_setting('auto_resize_columns', True) # 新增：默认开启自动列宽
     os.remove('schema.sql')  # 清理
     print('Initialized the database.')
 
@@ -336,10 +337,8 @@ def welcome():
     return render_template('welcome.html')
 
 
-@app.route('/schedule')
-def schedule():
-    """主预约日历视图"""
-    start_date_str = request.args.get('start_date')
+def get_schedule_data(start_date_str):
+    """获取日历页面所需的数据，用于 schedule 和 screenshot_view"""
     today = date.today()
 
     if start_date_str:
@@ -352,12 +351,9 @@ def schedule():
 
     # 将开始日期调整为本周的周一
     start_of_week = start_date - timedelta(days=start_date.weekday())
-
-    # 计算上一周和下一周的开始日期
     prev_week_start = start_of_week - timedelta(days=7)
     next_week_start = start_of_week + timedelta(days=7)
 
-    # 生成本周的日期信息
     week_days = []
     week_day_names = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
     for i in range(7):
@@ -366,26 +362,40 @@ def schedule():
             "date_obj": current_day,
             "date_str": current_day.strftime('%Y-%m-%d'),
             "display": current_day.strftime('%m月%d日'),
-            "weekday": week_day_names[i]
+            "weekday": week_day_names[i],
+            "day_index": i # 新增：用于JS复制功能
         })
 
     date_range_str = f"{week_days[0]['display']} ({week_days[0]['weekday']}) - {week_days[-1]['display']} ({week_days[-1]['weekday']})"
 
-    reservations = get_all_reservations()
-    time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
-    special_dates = get_setting('special_dates', {})
-    notices = get_setting('notices', [])
+    return {
+        "week_days": week_days,
+        "time_slots": get_setting('time_slots', DEFAULT_TIME_SLOTS),
+        "reservations": get_all_reservations(),
+        "date_range": date_range_str,
+        "prev_week_start": prev_week_start.strftime('%Y-%m-%d'),
+        "next_week_start": next_week_start.strftime('%Y-%m-%d'),
+        "today_start": today.strftime('%Y-%m-%d'),
+        "special_dates": get_setting('special_dates', {}),
+        "notices": get_setting('notices', []),
+        "auto_resize_columns": get_setting('auto_resize_columns', True)
+    }
 
-    return render_template('index.html',
-                           week_days=week_days,
-                           time_slots=time_slots,
-                           reservations=reservations,
-                           date_range=date_range_str,
-                           prev_week_start=prev_week_start.strftime('%Y-%m-%d'),
-                           next_week_start=next_week_start.strftime('%Y-%m-%d'),
-                           today_start=today.strftime('%Y-%m-%d'),
-                           special_dates=special_dates,
-                           notices=notices)
+
+@app.route('/schedule')
+def schedule():
+    """主预约日历视图"""
+    start_date_str = request.args.get('start_date')
+    context = get_schedule_data(start_date_str)
+    return render_template('index.html', **context)
+
+
+@app.route('/screenshot_view')
+def screenshot_view():
+    """新增：用于截图的只读日历视图"""
+    start_date_str = request.args.get('start_date')
+    context = get_schedule_data(start_date_str)
+    return render_template('screenshot.html', **context)
 
 
 @app.route('/submit_reservation', methods=['POST'])
@@ -400,6 +410,10 @@ def submit_reservation():
         return jsonify({"status": "error", "message": "无效的日期或时间段。"}), 400
 
     old_user_name = get_reservation(date_str, time_slot)
+
+    # 检查是否真的有变化
+    if old_user_name == new_user_name:
+        return jsonify({"status": "info", "message": "内容未变更。", "action": "none"})
 
     if new_user_name:
         # 创建或更新
@@ -485,11 +499,13 @@ def admin_dashboard():
     sorted_special_dates = sorted(special_dates.items())
     time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
     notices = get_setting('notices', [])
+    auto_resize_columns = get_setting('auto_resize_columns', True)
     return render_template('admin.html',
                            logged_in=True,
                            special_dates=sorted_special_dates,
                            time_slots=time_slots,
-                           notices=notices)
+                           notices=notices,
+                           auto_resize_columns=auto_resize_columns)
 
 
 @app.route('/admin/logout')
@@ -534,6 +550,16 @@ def manage_time_slots():
     new_time_slots = [slot.strip() for slot in new_time_slots if slot.strip()]
     if new_time_slots:
         save_setting('time_slots', new_time_slots)
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/column_width_setting', methods=['POST'])
+@admin_required
+def manage_column_width():
+    """新增：管理表格列宽设置"""
+    auto_resize = request.form.get('auto_resize_columns') == 'on'
+    save_setting('auto_resize_columns', auto_resize)
+    flash('表格列宽设置已更新。', 'info')
     return redirect(url_for('admin_dashboard'))
 
 

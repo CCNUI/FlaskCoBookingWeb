@@ -7,10 +7,12 @@
 
 {# 新增的服务器更新公告板块 #}
 <div class="flash-info" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
-    <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 27.1)</h4>
+    <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 28.0)</h4>
     <ul style="margin-bottom: 0; padding-left: 20px;">
-        <li><b>公告管理增强：</b>现已支持直接“编辑”现有公告的内容并改变公告的背景颜色。</li>
-        <li><b>UI界面优化：</b> 界面更加美观实用。</li>
+        <li><b>表格体验优化:</b> 新增锁定首行首列功能，滚动时保持行列标题可见。</li>
+        <li><b>效率工具:</b> 新增列复制/粘贴功能，便于快速批量排班。</li>
+        <li><b>移动端优化:</b> 现已支持在手机上双指缩放表格，并可设置自动调整列宽。</li>
+        <li><b>新增截图视图:</b> 提供一个无干扰的只读界面，方便截图保存。</li>
     </ul>
 </div>
 {# 公告板块结束 #}
@@ -25,7 +27,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-                {% if category != 'danger' %} {# 避免重复显示服务器过期提醒 #}
+                {% if category != 'danger' and category != 'admin_info' %}
                  <div class="flash-{{ category }}">{{ message }}</div>
                 {% endif %}
             {% endfor %}
@@ -40,6 +42,22 @@
     </form>
 {% else %}
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}" onclick="_hmt.push(['_trackEvent', 'AdminAuth', 'Click', 'Logout']);">(ง •_•)ง</a></p>
+
+    {# 仅在Redis环境下显示活跃管理员信息 #}
+    {% with admin_messages = get_flashed_messages(category_filter=['admin_info']) %}
+        {% if admin_messages %}
+            {% set admin_info = admin_messages[0] %}
+            <div class="admin-info-box">
+                <p>当前有 <b>{{ admin_info.count }}</b> 位管理员在线:</p>
+                <ul>
+                {% for session in admin_info.sessions %}
+                    <li>IP: {{ session.ip }} | 位置: {{ session.region }} | 登录于: {{ session.login_time }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endwith %}
+
 
     <div class="admin-panel">
         <div class="admin-section">
@@ -67,6 +85,22 @@
                     {% endfor %}
                 </ul>
                 {% else %}<p>当前没有设置特殊日期。</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">显示设置 <span class="toggle-icon">【单击进入】</span></h3>
+            <div class="collapsible-content" style="display:none;">
+                <form action="{{ url_for('manage_column_width') }}" method="post" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'Settings', 'Save Display']);">
+                    <div class="info-box">
+                        <strong>提示:</strong> 在小屏幕（如手机）上，开启此项可使表格列宽自动适应内容，避免文字被截断。
+                    </div>
+                    <div class="form-group-checkbox">
+                        <input type="checkbox" id="auto_resize_columns" name="auto_resize_columns" {% if auto_resize_columns %}checked{% endif %}>
+                        <label for="auto_resize_columns">在窄屏下自动调整列宽</label>
+                    </div>
+                    <button type="submit" class="button-primary">保存设置</button>
+                </form>
             </div>
         </div>
 

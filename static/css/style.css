@@ -144,32 +144,55 @@ a:hover {
 }
 
 .table-container {
-    overflow-x: auto;
+    overflow: auto; /* Changed for sticky positioning */
+    max-height: 70vh; /* Limit height to enable vertical scroll */
+    max-width: 100%;
     -webkit-overflow-scrolling: touch;
+    border: 1px solid #ddd;
 }
 
 .schedule-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; /* Must be separate for sticky to work */
+    border-spacing: 0;
     min-width: 900px;
 }
 
 .schedule-table th, .schedule-table td {
     border: 1px solid #ddd;
-    padding: 4px 8px; /* MODIFIED: Reduced padding for smaller row height */
+    padding: 4px 8px;
     text-align: center;
     vertical-align: middle;
     font-size: 0.95rem;
     min-width: 120px;
+    background-color: white; /* Default background for cells */
 }
 
-.schedule-table th {
+/* Sticky Header & Column Styles */
+.sticky-cell {
+    position: -webkit-sticky;
+    position: sticky;
     background-color: var(--light-color);
-    font-weight: normal;
+    z-index: 10;
 }
+/* Header row cells */
+thead .sticky-cell {
+    top: 0;
+    z-index: 20;
+}
+/* First column cells in the body */
+tbody td.sticky-cell {
+    left: 0;
+    z-index: 15;
+}
+/* Top-left corner cell */
+thead th.sticky-cell:first-child {
+    left: 0;
+    z-index: 30;
+}
+
 
 .schedule-table td {
-    /* REMOVED: height: 40px; */
     cursor: pointer;
     transition: background-color 0.2s;
     word-break: break-all;
@@ -184,6 +207,19 @@ a:hover {
     font-size: 1.2rem;
 }
 
+/* Column Auto-Resize Feature */
+@media (max-width: 900px) {
+    .schedule-table.auto-resize-columns {
+        table-layout: auto;
+        width: auto;
+    }
+    .schedule-table.auto-resize-columns th,
+    .schedule-table.auto-resize-columns td {
+        white-space: nowrap;
+        width: auto;
+    }
+}
+
 .special-day {
     background-color: var(--warning-color) !important;
     color: var(--dark-color);
@@ -194,6 +230,32 @@ a:hover {
     font-weight: bold;
     margin-top: 4px;
 }
+
+/* Column Copy/Paste Buttons */
+.column-actions {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 4px;
+}
+.button-copy, .button-paste {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    border-radius: 3px;
+    border: 1px solid var(--secondary-color);
+    background-color: #fff;
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+.button-copy:hover, .button-paste:hover {
+    background-color: #f0f0f0;
+}
+.button-copy.copied {
+    background-color: var(--success-color);
+    color: white;
+    border-color: var(--success-color);
+}
+
 
 /* --- 模态框 --- */
 .modal {
@@ -230,14 +292,13 @@ a:hover {
 
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; }
-/* MODIFIED: Added textarea for consistent styling */
 .form-group input, .form-group textarea {
     width: 100%;
     padding: 8px;
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-family: inherit; /* Ensure textarea uses the body font */
+    font-family: inherit;
 }
 .form-actions { display: flex; justify-content: space-between; }
 .modal-message { margin-top: 1rem; text-align: center; }
@@ -288,8 +349,9 @@ a:hover {
 .collapsible:hover { background-color: #e2e6ea; }
 .collapsible-content {
     padding: 15px;
-    display: none; /* 改为 none，默认折叠 */
+    display: none;
     overflow: hidden;
+    border-top: 1px solid #e0e0e0;
 }
 .info-box {
     background-color: #e7f3fe;
@@ -303,6 +365,16 @@ a:hover {
     gap: 10px;
     align-items: center;
 }
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+.form-group-checkbox label {
+    margin-bottom: 0;
+}
+
 .item-list { list-style: none; padding-left: 0; }
 .item-list li {
     display: flex;
@@ -366,7 +438,7 @@ a:hover {
 }
 .notice-item p {
     margin: 0;
-    white-space: pre-wrap; /* Preserve line breaks in notice text */
+    white-space: pre-wrap;
 }
 .notice-item:last-child {
     margin-bottom: 0;
@@ -422,22 +494,21 @@ a:hover {
 /* --- 日期导航按钮样式 --- */
 .date-navigation a {
     padding: 8px 15px;
-    border: 1px solid var(--primary-color); /* 使用次要颜色作为边框 */
+    border: 1px solid var(--primary-color);
     border-radius: 5px;
-    color: var(--primary-color); /* 文字颜色与边框一致 */
+    color: var(--primary-color);
     text-decoration: none;
     transition: all 0.2s ease-in-out;
-    margin: 0 5px; /* 调整间距 */
+    margin: 0 5px;
 }
 
 .date-navigation a:hover {
-    background-color: var(--navnext-color); /* 鼠标悬浮时改变背景和文字颜色 */
+    background-color: var(--navnext-color);
     color: white;
 }
 
-/* “返回本周”按钮的特殊样式 */
-.date-navigation a[href$="/schedule"] { /* 使用属性选择器选中“返回本周”的链接 */
-    border-color: var(--primary-color); /* 使用主题色 */
+.date-navigation a[href$="/schedule"] {
+    border-color: var(--primary-color);
     color: var(--primary-color);
     font-weight: bold;
 }
@@ -476,7 +547,6 @@ a:hover {
 }
 
 /* Flash 消息样式 */
-/* MODIFIED: Added .flash-danger */
 .flash-error, .flash-danger {
     color: #721c24;
     background-color: #f8d7da;
