@@ -17,21 +17,17 @@
     <p class="date-range">{{ date_range }}</p>
 </div>
 
-<div class="table-container">
-    <table class="schedule-table {% if auto_resize_columns %}auto-resize-columns{% endif %}">
+<div class="table-container table-layout-{{ table_layout }}">
+    <table class="schedule-table">
         <thead>
             <tr>
-                <th class="sticky-cell">时间段</th>
+                <th class="sticky-header">时间段</th>
                 {% for day in week_days %}
-                <th class="sticky-cell {% if day.date_str in special_dates %}special-day{% endif %}">
+                <th class="sticky-header {% if day.date_str in special_dates %}special-day{% endif %}">
                     {{ day.display }}<br>{{ day.weekday }}
                     {% if day.date_str in special_dates %}
                     <span class="special-day-name">{{ special_dates[day.date_str] }}</span>
                     {% endif %}
-                    <div class="column-actions">
-                        <button class="button-copy" data-day-index="{{ day.day_index }}">复制</button>
-                        <button class="button-paste" data-day-index="{{ day.day_index }}">粘贴</button>
-                    </div>
                 </th>
                 {% endfor %}
             </tr>
@@ -39,9 +35,9 @@
         <tbody>
             {% for slot in time_slots %}
             <tr>
-                <td class="sticky-cell">{{ slot }}</td>
+                <td class="sticky-column">{{ slot }}</td>
                 {% for day in week_days %}
-                <td data-date="{{ day.date_str }}" data-time-slot="{{ slot }}" data-day-index="{{ day.day_index }}">
+                <td data-date="{{ day.date_str }}" data-time-slot="{{ slot }}">
                     {{ reservations.get(day.date_str, {}).get(slot, '') }}
                 </td>
                 {% endfor %}

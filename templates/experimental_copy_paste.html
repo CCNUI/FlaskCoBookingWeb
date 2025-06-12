@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=3.0">
+    <title>实验性界面 (复制/粘贴) - 优智通科技共修室预约系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/experimental_copy_paste.css') }}?v=1.1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="container">
+            <a href="{{ url_for('welcome') }}" class="logo">📚 优智通科技</a>
+            <div class="nav-links">
+                <a href="{{ url_for('schedule') }}">返回主日历</a>
+                <a href="{{ url_for('admin_dashboard') }}">返回管理员后台</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="schedule-header">
+            <h2>实验性界面 (复制/粘贴)</h2>
+            <div class="date-navigation">
+                <a href="{{ url_for('experimental_copy_paste', start_date=prev_week_start) }}">&laquo; 上一周</a>
+                <a href="{{ url_for('experimental_copy_paste') }}">返回本周</a>
+                <a href="{{ url_for('experimental_copy_paste', start_date=next_week_start) }}">下一周 &raquo;</a>
+            </div>
+            <p class="date-range">{{ date_range }}</p>
+        </div>
+
+        <div class="info-box" style="text-align: left;">
+            <strong>操作说明:</strong><br>
+            1. 点击表头下方的“复制”按钮，可将当天整列的预约人名单复制到剪贴板。<br>
+            2. 点击“粘贴”按钮，会将剪贴板中的名单依次填充到当天的预约单元格中。<br>
+            3. 您可以先在文本编辑器中编辑好名单（每行一个名字），然后复制，再到此页面粘贴。<br>
+            4. 粘贴是“覆盖”操作，会替换现有的预约。粘贴后请点击“保存本列更改”以生效。
+        </div>
+
+        <div class="table-container">
+            <table class="schedule-table" id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>时间段</th>
+                        {% for day in week_days %}
+                        <th data-date="{{ day.date_str }}">
+                            {{ day.display }}<br>{{ day.weekday }}
+                            <div class="col-actions">
+                                <button class="copy-col-btn button-secondary">复制</button>
+                                <button class="paste-col-btn button-secondary">粘贴</button>
+                                <button class="save-col-btn button-primary">保存本列更改</button>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in time_slots %}
+                    <tr>
+                        <td>{{ slot }}</td>
+                        {% for day in week_days %}
+                        <td data-date="{{ day.date_str }}" data-time-slot="{{ slot }}" contenteditable="true">
+                            {{ reservations.get(day.date_str, {}).get(slot, '') }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>技术支持：yudas | 宇达司飞机工业</p>
+            <p>&copy; 2017-2025 优智通科技. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="permissionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>申请剪贴板权限</h3>
+            <p>为了使用复制和粘贴功能，本页面需要获取您浏览器的剪贴板读写权限。</p>
+            <p>请在接下来弹出的浏览器提示框中点击“<b>允许</b>”。如果错过了，可以点击浏览器地址栏左侧的图标重新授权。</p>
+            <div class="form-actions" style="justify-content: center;">
+                <button id="grantPermissionBtn" class="button-primary">我明白了，开始授权</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('scheduleTable');
+    const permissionModal = document.getElementById('permissionModal');
+    const grantPermissionBtn = document.getElementById('grantPermissionBtn');
+
+    // --- 剪贴板权限 ---
+    function requestClipboardPermission() {
+        // 修正：尝试写入一段有意义的示例文本，以可靠地触发浏览器权限弹窗。
+        navigator.clipboard.writeText('申请权限示例文本').then(() => {
+            console.log('剪贴板写入成功，权限已授予或之前已授予。');
+        }).catch(err => {
+            console.error('申请权限时无法写入剪贴板:', err);
+        });
+    }
+
+    grantPermissionBtn.addEventListener('click', () => {
+        permissionModal.style.display = 'none';
+        // 连续申请两次，以防用户第一次点错或未注意到弹窗
+        requestClipboardPermission();
+        setTimeout(requestClipboardPermission, 500);
+    });
+
+    // 页面加载时显示权限提示
+    permissionModal.style.display = 'flex';
+
+
+    // --- 事件委托处理按钮点击 ---
+    table.addEventListener('click', function(e) {
+        if (e.target.classList.contains('copy-col-btn')) {
+            handleCopy(e.target);
+        }
+        if (e.target.classList.contains('paste-col-btn')) {
+            handlePaste(e.target);
+        }
+        if (e.target.classList.contains('save-col-btn')) {
+            handleSave(e.target);
+        }
+    });
+
+    // --- 复制功能 ---
+    function handleCopy(button) {
+        const header = button.closest('th');
+        const date = header.dataset.date;
+        const cells = table.querySelectorAll(`td[data-date="${date}"]`);
+
+        const names = Array.from(cells).map(cell => cell.innerText.trim());
+        // 修正：使用真正的换行符 '\n' 而不是字符串 '\\n'
+        const copyText = names.join('\n');
+
+        navigator.clipboard.writeText(copyText).then(() => {
+            alert(`已复制 ${date} 的预约名单！`);
+        }).catch(err => {
+            alert('复制失败！请检查浏览器剪贴板权限。');
+            console.error('复制错误:', err);
+        });
+    }
+
+    // --- 粘贴功能 ---
+    function handlePaste(button) {
+        const header = button.closest('th');
+        const date = header.dataset.date;
+        const cells = table.querySelectorAll(`td[data-date="${date}"]`);
+
+        navigator.clipboard.readText().then(text => {
+            // 修正：使用能正确处理 Windows (\r\n) 和 Unix (\n) 换行符的正则表达式
+            const names = text.split(/\r?\n/);
+
+            cells.forEach((cell, index) => {
+                if (index < names.length) {
+                    cell.innerText = names[index].trim();
+                } else {
+                    cell.innerText = ''; // 如果粘贴内容不够，则清空剩余单元格
+                }
+            });
+            alert('粘贴完成！请记得点击“保存”以使更改生效。');
+        }).catch(err => {
+            alert('粘贴失败！请检查浏览器剪贴板权限。');
+            console.error('粘贴错误:', err);
+        });
+    }
+
+    // --- 保存功能 ---
+    async function handleSave(button) {
+        const header = button.closest('th');
+        const date = header.dataset.date;
+        const cells = table.querySelectorAll(`td[data-date="${date}"]`);
+
+        button.innerText = '保存中...';
+        button.disabled = true;
+
+        const promises = Array.from(cells).map(cell => {
+            const timeSlot = cell.dataset.timeSlot;
+            const name = cell.innerText.trim();
+            const data = { date, time_slot: timeSlot, name };
+
+            return fetch('/submit_reservation', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        });
+
+        try {
+            // 等待所有保存请求完成
+            const responses = await Promise.all(promises);
+            // 检查是否有失败的请求
+            const failed = responses.filter(res => !res.ok);
+            if (failed.length > 0) {
+                 alert(`${date} 的部分更改保存失败，请检查网络后重试。`);
+            } else {
+                 alert(`${date} 的所有更改已成功保存！`);
+            }
+        } catch (error) {
+            alert('保存过程中出现网络错误。');
+            console.error('保存错误:', error);
+        } finally {
+            button.innerText = '保存本列更改';
+            button.disabled = false;
+        }
+    }
+});
+</script>
+</body>
+</html>

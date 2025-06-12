@@ -272,7 +272,7 @@ def init_db_command():
     save_setting('time_slots', DEFAULT_TIME_SLOTS)
     save_setting('special_dates', {})  # 初始为空
     save_setting('notices', [])  # 初始为空
-    save_setting('auto_resize_columns', True) # 新增：默认开启自动列宽
+    save_setting('table_layout', 'fixed')  # 新增：表格布局默认为 'fixed'
     os.remove('schema.sql')  # 清理
     print('Initialized the database.')
 
@@ -330,17 +330,9 @@ def admin_required(f):
 
 
 # --- 路由 ---
-
-@app.route('/')
-def welcome():
-    """欢迎入口页面"""
-    return render_template('welcome.html')
-
-
 def get_schedule_data(start_date_str):
-    """获取日历页面所需的数据，用于 schedule 和 screenshot_view"""
+    """提取获取日历数据的逻辑，以便重用"""
     today = date.today()
-
     if start_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -349,7 +341,6 @@ def get_schedule_data(start_date_str):
     else:
         start_date = today
 
-    # 将开始日期调整为本周的周一
     start_of_week = start_date - timedelta(days=start_date.weekday())
     prev_week_start = start_of_week - timedelta(days=7)
     next_week_start = start_of_week + timedelta(days=7)
@@ -362,24 +353,27 @@ def get_schedule_data(start_date_str):
             "date_obj": current_day,
             "date_str": current_day.strftime('%Y-%m-%d'),
             "display": current_day.strftime('%m月%d日'),
-            "weekday": week_day_names[i],
-            "day_index": i # 新增：用于JS复制功能
+            "weekday": week_day_names[i]
         })
 
     date_range_str = f"{week_days[0]['display']} ({week_days[0]['weekday']}) - {week_days[-1]['display']} ({week_days[-1]['weekday']})"
 
     return {
         "week_days": week_days,
-        "time_slots": get_setting('time_slots', DEFAULT_TIME_SLOTS),
-        "reservations": get_all_reservations(),
         "date_range": date_range_str,
         "prev_week_start": prev_week_start.strftime('%Y-%m-%d'),
         "next_week_start": next_week_start.strftime('%Y-%m-%d'),
-        "today_start": today.strftime('%Y-%m-%d'),
+        "reservations": get_all_reservations(),
+        "time_slots": get_setting('time_slots', DEFAULT_TIME_SLOTS),
         "special_dates": get_setting('special_dates', {}),
-        "notices": get_setting('notices', []),
-        "auto_resize_columns": get_setting('auto_resize_columns', True)
+        "notices": get_setting('notices', [])
     }
+
+
+@app.route('/')
+def welcome():
+    """欢迎入口页面"""
+    return render_template('welcome.html')
 
 
 @app.route('/schedule')
@@ -387,15 +381,8 @@ def schedule():
     """主预约日历视图"""
     start_date_str = request.args.get('start_date')
     context = get_schedule_data(start_date_str)
+    context['table_layout'] = get_setting('table_layout', 'fixed')
     return render_template('index.html', **context)
-
-
-@app.route('/screenshot_view')
-def screenshot_view():
-    """新增：用于截图的只读日历视图"""
-    start_date_str = request.args.get('start_date')
-    context = get_schedule_data(start_date_str)
-    return render_template('screenshot.html', **context)
 
 
 @app.route('/submit_reservation', methods=['POST'])
@@ -410,10 +397,6 @@ def submit_reservation():
         return jsonify({"status": "error", "message": "无效的日期或时间段。"}), 400
 
     old_user_name = get_reservation(date_str, time_slot)
-
-    # 检查是否真的有变化
-    if old_user_name == new_user_name:
-        return jsonify({"status": "info", "message": "内容未变更。", "action": "none"})
 
     if new_user_name:
         # 创建或更新
@@ -499,13 +482,13 @@ def admin_dashboard():
     sorted_special_dates = sorted(special_dates.items())
     time_slots = get_setting('time_slots', DEFAULT_TIME_SLOTS)
     notices = get_setting('notices', [])
-    auto_resize_columns = get_setting('auto_resize_columns', True)
+    table_layout = get_setting('table_layout', 'fixed')  # 获取表格布局设置
     return render_template('admin.html',
                            logged_in=True,
                            special_dates=sorted_special_dates,
                            time_slots=time_slots,
                            notices=notices,
-                           auto_resize_columns=auto_resize_columns)
+                           table_layout=table_layout)  # 传递给模板
 
 
 @app.route('/admin/logout')
@@ -553,13 +536,16 @@ def manage_time_slots():
     return redirect(url_for('admin_dashboard'))
 
 
-@app.route('/admin/column_width_setting', methods=['POST'])
+@app.route('/admin/table_layout', methods=['POST'])
 @admin_required
-def manage_column_width():
-    """新增：管理表格列宽设置"""
-    auto_resize = request.form.get('auto_resize_columns') == 'on'
-    save_setting('auto_resize_columns', auto_resize)
-    flash('表格列宽设置已更新。', 'info')
+def manage_table_layout():
+    """管理表格布局模式"""
+    layout_mode = request.form.get('table_layout', 'fixed')
+    if layout_mode in ['fixed', 'auto']:
+        save_setting('table_layout', layout_mode)
+        flash('表格布局设置已保存。', 'info')
+    else:
+        flash('无效的布局设置。', 'error')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -660,6 +646,26 @@ def export_data():
         mimetype="text/csv",
         headers={"Content-disposition":
                      f"attachment; filename=youtong_booking_export_{datetime.utcnow().strftime('%Y%m%d')}.csv"})
+
+
+# --- 新增：实验性页面路由 ---
+
+@app.route('/experimental/copy-paste')
+@admin_required
+def experimental_copy_paste():
+    """支持复制粘贴的界面"""
+    start_date_str = request.args.get('start_date')
+    context = get_schedule_data(start_date_str)
+    return render_template('experimental_copy_paste.html', **context)
+
+
+@app.route('/experimental/screenshot')
+@admin_required
+def experimental_screenshot():
+    """适合整页截图的界面"""
+    start_date_str = request.args.get('start_date')
+    context = get_schedule_data(start_date_str)
+    return render_template('experimental_screenshot.html', **context)
 
 
 # --- 错误处理 ---

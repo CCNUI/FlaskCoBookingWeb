@@ -9,10 +9,8 @@
 <div class="flash-info" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
     <h4 style="margin-top: 0; margin-bottom: 0.5rem;">服务器更新公告 (版本 28.0)</h4>
     <ul style="margin-bottom: 0; padding-left: 20px;">
-        <li><b>表格体验优化:</b> 新增锁定首行首列功能，滚动时保持行列标题可见。</li>
-        <li><b>效率工具:</b> 新增列复制/粘贴功能，便于快速批量排班。</li>
-        <li><b>移动端优化:</b> 现已支持在手机上双指缩放表格，并可设置自动调整列宽。</li>
-        <li><b>新增截图视图:</b> 提供一个无干扰的只读界面，方便截图保存。</li>
+        <li><b>表格功能增强：</b>主页表格现已支持首行首列固定、二指缩放，并可在后台设置列宽模式。</li>
+        <li><b>实验性界面：</b>新增“复制粘贴”和“整页截图”两种实验性表格界面，提供更灵活的操作方式。</li>
     </ul>
 </div>
 {# 公告板块结束 #}
@@ -27,7 +25,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
-                {% if category != 'danger' and category != 'admin_info' %}
+                {% if category != 'danger' and category != 'admin_info' %} {# 避免重复显示服务器过期提醒和管理员信息 #}
                  <div class="flash-{{ category }}">{{ message }}</div>
                 {% endif %}
             {% endfor %}
@@ -42,22 +40,6 @@
     </form>
 {% else %}
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}" onclick="_hmt.push(['_trackEvent', 'AdminAuth', 'Click', 'Logout']);">(ง •_•)ง</a></p>
-
-    {# 仅在Redis环境下显示活跃管理员信息 #}
-    {% with admin_messages = get_flashed_messages(category_filter=['admin_info']) %}
-        {% if admin_messages %}
-            {% set admin_info = admin_messages[0] %}
-            <div class="admin-info-box">
-                <p>当前有 <b>{{ admin_info.count }}</b> 位管理员在线:</p>
-                <ul>
-                {% for session in admin_info.sessions %}
-                    <li>IP: {{ session.ip }} | 位置: {{ session.region }} | 登录于: {{ session.login_time }}</li>
-                {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-    {% endwith %}
-
 
     <div class="admin-panel">
         <div class="admin-section">
@@ -85,22 +67,6 @@
                     {% endfor %}
                 </ul>
                 {% else %}<p>当前没有设置特殊日期。</p>{% endif %}
-            </div>
-        </div>
-
-        <div class="admin-section">
-            <h3 class="collapsible">显示设置 <span class="toggle-icon">【单击进入】</span></h3>
-            <div class="collapsible-content" style="display:none;">
-                <form action="{{ url_for('manage_column_width') }}" method="post" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'Settings', 'Save Display']);">
-                    <div class="info-box">
-                        <strong>提示:</strong> 在小屏幕（如手机）上，开启此项可使表格列宽自动适应内容，避免文字被截断。
-                    </div>
-                    <div class="form-group-checkbox">
-                        <input type="checkbox" id="auto_resize_columns" name="auto_resize_columns" {% if auto_resize_columns %}checked{% endif %}>
-                        <label for="auto_resize_columns">在窄屏下自动调整列宽</label>
-                    </div>
-                    <button type="submit" class="button-primary">保存设置</button>
-                </form>
             </div>
         </div>
 
@@ -152,6 +118,53 @@
                     {% endfor %}
                 </ul>
                 {% else %}<p>当前没有设置公告。</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">表格列宽设置 <span class="toggle-icon">【单击进入】</span></h3>
+            <div class="collapsible-content" style="display:none;">
+                <div class="info-box"><strong>提示:</strong> 此设置影响主预约日历的显示方式。<br>
+                    - <b>固定宽度：</b>在所有设备上保持统一的列宽，超出部分可水平滚动。适合内容较多的情况。<br>
+                    - <b>自动宽度：</b>当浏览器窗口足够宽时，列宽自动适应内容；窗口较窄时，列宽会缩小以容纳更多列。
+                </div>
+                <form action="{{ url_for('manage_table_layout') }}" method="post">
+                    <div class="form-group">
+                        <label style="margin-bottom: 10px;">请选择表格列宽模式:</label>
+                        <label style="font-weight: normal; display: block; margin-bottom: 5px;">
+                            <input type="radio" name="table_layout" value="fixed" {% if table_layout == 'fixed' %}checked{% endif %}>
+                            固定宽度 (推荐)
+                        </label>
+                        <label style="font-weight: normal; display: block;">
+                            <input type="radio" name="table_layout" value="auto" {% if table_layout == 'auto' %}checked{% endif %}>
+                            自动宽度
+                        </label>
+                    </div>
+                    <button type="submit" class="button-primary">保存设置</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">实验性表格界面 <span class="toggle-icon">【单击进入】</span></h3>
+            <div class="collapsible-content" style="display:none;">
+                <div class="info-box"><strong>提示:</strong> 以下为特殊用途的表格界面，拥有独立样式和功能，可能存在未知问题。</div>
+                <ul class="item-list">
+                    <li>
+                        <a href="{{ url_for('experimental_copy_paste') }}" target="_blank" style="text-decoration: none;">
+                            <span style="font-weight: bold;">支持复制粘贴的界面</span><br>
+                            <small>支持对每日的预约进行整列复制和粘贴，方便快速排班。</small>
+                        </a>
+                        <a href="{{ url_for('experimental_copy_paste') }}" target="_blank" class="button-secondary" style="text-decoration: none;">进入</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('experimental_screenshot') }}" target="_blank" style="text-decoration: none;">
+                           <span style="font-weight: bold;">适合整页截图的界面</span><br>
+                           <small>完整展示一周的表格，允许无限缩小，便于截图保存。</small>
+                        </a>
+                        <a href="{{ url_for('experimental_screenshot') }}" target="_blank" class="button-secondary" style="text-decoration: none;">进入</a>
+                    </li>
+                </ul>
             </div>
         </div>
 

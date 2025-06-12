@@ -144,51 +144,63 @@ a:hover {
 }
 
 .table-container {
-    overflow: auto; /* Changed for sticky positioning */
-    max-height: 70vh; /* Limit height to enable vertical scroll */
-    max-width: 100%;
+    overflow: auto; /* 改为auto以同时支持水平和垂直滚动 */
+    max-height: 70vh; /* 限制最大高度以触发垂直滚动 */
     -webkit-overflow-scrolling: touch;
     border: 1px solid #ddd;
 }
 
 .schedule-table {
     width: 100%;
-    border-collapse: separate; /* Must be separate for sticky to work */
+    border-collapse: separate; /* 改为 separate 以支持 sticky */
     border-spacing: 0;
+}
+
+/* 新增：表格布局样式 */
+.table-layout-fixed .schedule-table {
+    table-layout: fixed; /* 固定宽度模式 */
     min-width: 900px;
+}
+.table-layout-auto .schedule-table {
+    table-layout: auto; /* 自动宽度模式 */
+    width: auto;
+}
+.table-layout-auto .schedule-table th, .table-layout-auto .schedule-table td {
+    white-space: nowrap; /* 防止自动模式下文字换行 */
 }
 
 .schedule-table th, .schedule-table td {
-    border: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
     padding: 4px 8px;
     text-align: center;
     vertical-align: middle;
     font-size: 0.95rem;
-    min-width: 120px;
-    background-color: white; /* Default background for cells */
+}
+.schedule-table th {
+    background-color: var(--light-color);
+    font-weight: normal;
 }
 
-/* Sticky Header & Column Styles */
-.sticky-cell {
+/* 新增：固定行列的核心样式 */
+.sticky-header {
     position: -webkit-sticky;
     position: sticky;
-    background-color: var(--light-color);
-    z-index: 10;
-}
-/* Header row cells */
-thead .sticky-cell {
     top: 0;
-    z-index: 20;
+    z-index: 2;
+    background-color: var(--light-color); /* 必须设置背景色 */
 }
-/* First column cells in the body */
-tbody td.sticky-cell {
+.sticky-column {
+    position: -webkit-sticky;
+    position: sticky;
     left: 0;
-    z-index: 15;
+    z-index: 1;
+    background-color: #ffffff; /* 必须设置背景色 */
 }
-/* Top-left corner cell */
-thead th.sticky-cell:first-child {
+/* 左上角固定的单元格需要更高的z-index */
+thead th.sticky-header:first-child {
     left: 0;
-    z-index: 30;
+    z-index: 3;
 }
 
 
@@ -207,19 +219,6 @@ thead th.sticky-cell:first-child {
     font-size: 1.2rem;
 }
 
-/* Column Auto-Resize Feature */
-@media (max-width: 900px) {
-    .schedule-table.auto-resize-columns {
-        table-layout: auto;
-        width: auto;
-    }
-    .schedule-table.auto-resize-columns th,
-    .schedule-table.auto-resize-columns td {
-        white-space: nowrap;
-        width: auto;
-    }
-}
-
 .special-day {
     background-color: var(--warning-color) !important;
     color: var(--dark-color);
@@ -230,32 +229,6 @@ thead th.sticky-cell:first-child {
     font-weight: bold;
     margin-top: 4px;
 }
-
-/* Column Copy/Paste Buttons */
-.column-actions {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-top: 4px;
-}
-.button-copy, .button-paste {
-    padding: 2px 6px;
-    font-size: 0.75rem;
-    border-radius: 3px;
-    border: 1px solid var(--secondary-color);
-    background-color: #fff;
-    color: var(--secondary-color);
-    cursor: pointer;
-}
-.button-copy:hover, .button-paste:hover {
-    background-color: #f0f0f0;
-}
-.button-copy.copied {
-    background-color: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
-}
-
 
 /* --- 模态框 --- */
 .modal {
@@ -349,9 +322,8 @@ thead th.sticky-cell:first-child {
 .collapsible:hover { background-color: #e2e6ea; }
 .collapsible-content {
     padding: 15px;
-    display: none;
+    display: none; /* 改为 none，默认折叠 */
     overflow: hidden;
-    border-top: 1px solid #e0e0e0;
 }
 .info-box {
     background-color: #e7f3fe;
@@ -365,16 +337,6 @@ thead th.sticky-cell:first-child {
     gap: 10px;
     align-items: center;
 }
-.form-group-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 1rem;
-}
-.form-group-checkbox label {
-    margin-bottom: 0;
-}
-
 .item-list { list-style: none; padding-left: 0; }
 .item-list li {
     display: flex;
@@ -404,7 +366,8 @@ thead th.sticky-cell:first-child {
     }
     .main-header .nav-links a { margin-left: 0; }
 
-    .schedule-table th, .schedule-table td {
+    .table-layout-fixed .schedule-table th,
+    .table-layout-fixed .schedule-table td {
         padding: 6px 8px;
         font-size: 0.85rem;
         min-width: 100px;
@@ -438,7 +401,7 @@ thead th.sticky-cell:first-child {
 }
 .notice-item p {
     margin: 0;
-    white-space: pre-wrap;
+    white-space: pre-wrap; /* Preserve line breaks in notice text */
 }
 .notice-item:last-child {
     margin-bottom: 0;
@@ -501,49 +464,18 @@ thead th.sticky-cell:first-child {
     transition: all 0.2s ease-in-out;
     margin: 0 5px;
 }
-
 .date-navigation a:hover {
     background-color: var(--navnext-color);
     color: white;
 }
-
-.date-navigation a[href$="/schedule"] {
+.date-navigation a[href$="/schedule"], .date-navigation a:first-child[href*="start_date="] + a {
     border-color: var(--primary-color);
     color: var(--primary-color);
     font-weight: bold;
 }
-
-.date-navigation a[href$="/schedule"]:hover {
+.date-navigation a[href$="/schedule"]:hover, .date-navigation a:first-child[href*="start_date="] + a:hover {
     background-color: var(--primary-color);
     color: white;
-}
-
-/* 活跃管理员信息提示框样式 */
-.admin-info-box {
-    background-color: #e7f3fe;
-    border: 1px solid #b3d7ff;
-    color: #004085;
-    padding: 15px;
-    margin: 20px auto;
-    border-radius: 8px;
-    max-width: 800px;
-}
-.admin-info-box p {
-    margin-top: 0;
-    font-size: 1.1rem;
-}
-.admin-info-box ul {
-    list-style-type: none;
-    padding-left: 0;
-    margin-bottom: 0;
-}
-.admin-info-box li {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    padding: 8px 12px;
-    margin-top: 5px;
-    border-radius: 4px;
-    font-size: 0.9rem;
 }
 
 /* Flash 消息样式 */

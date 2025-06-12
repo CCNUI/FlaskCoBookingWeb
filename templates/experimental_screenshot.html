@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=0.1, maximum-scale=5.0">
+    <title>实验性界面 (截图) - 优智通科技共修室预约系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/experimental_screenshot.css') }}?v=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+</head>
+<body>
+    <header class="main-header">
+        <nav class="container">
+            <a href="{{ url_for('welcome') }}" class="logo">📚 优智通科技</a>
+             <div class="nav-links">
+                <a href="{{ url_for('schedule') }}">返回主日历</a>
+                <a href="{{ url_for('admin_dashboard') }}">返回管理员后台</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="schedule-header">
+            <h2>实验性界面 (截图友好)</h2>
+            <div class="date-navigation">
+                <a href="{{ url_for('experimental_screenshot', start_date=prev_week_start) }}">&laquo; 上一周</a>
+                <a href="{{ url_for('experimental_screenshot') }}">返回本周</a>
+                <a href="{{ url_for('experimental_screenshot', start_date=next_week_start) }}">下一周 &raquo;</a>
+            </div>
+            <p class="date-range">{{ date_range }}</p>
+            <p class="info-text">提示：您现在可以双指自由缩放页面，以便将整个表格截取到一张图片中。</p>
+        </div>
+
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>时间段</th>
+                    {% for day in week_days %}
+                    <th class="{% if day.date_str in special_dates %}special-day{% endif %}">
+                        {{ day.display }}<br>{{ day.weekday }}
+                        {% if day.date_str in special_dates %}
+                        <span class="special-day-name">{{ special_dates[day.date_str] }}</span>
+                        {% endif %}
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in time_slots %}
+                <tr>
+                    <td>{{ slot }}</td>
+                    {% for day in week_days %}
+                    <td>
+                        {{ reservations.get(day.date_str, {}).get(slot, '') }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>技术支持：yudas | 宇达司飞机工业</p>
+            <p>&copy; 2017-2025 优智通科技. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
