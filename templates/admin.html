@@ -6,11 +6,19 @@
 <h2>管理员后台</h2>
 
 {% if not logged_in %}
+    {# 登录表单部分 #}
     <form action="{{ url_for('admin_login') }}" method="post" class="admin-form" onsubmit="_hmt.push(['_trackEvent', 'AdminAuth', 'Submit', 'Login Attempt']);">
         <h3>管理员登录</h3>
-        {% if error %}
-            <p class="error-message">{{ error }}</p>
-        {% endif %}
+
+        {# 显示 flash 消息，如密码错误、登出成功等 #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
         <div class="form-group">
             <label for="password">密码:</label>
             <input type="password" id="password" name="password" required>
@@ -19,9 +27,31 @@
     </form>
 {% else %}
     <p>欢迎, 管理员! <a href="{{ url_for('admin_logout') }}" onclick="_hmt.push(['_trackEvent', 'AdminAuth', 'Click', 'Logout']);">(ง •_•)ง</a></p>
+
+    {# 等待修复：显示活跃管理员信息
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if category == 'admin_info' %}
+            <div class="admin-info-box">
+              <p>
+                <strong>当前在线管理员: {{ message.count }} 位 (按IP统计)</strong>
+              </p>
+              <ul>
+                {% for sess in message.sessions %}
+                  <li>IP: {{ sess.ip }} | 区域: {{ sess.region }} | 登录时间: {{ sess.login_time }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    #}
+
     <div class="admin-panel">
         <div class="admin-section">
-            <h3 class="collapsible">特殊日期管理 (斋日) <span class="toggle-icon">【双击进入】</span></h3>
+            <h3 class="collapsible">特殊日期管理 (斋日) <span class="toggle-icon">【单击进入】</span></h3>
             <div class="collapsible-content" style="display:none;">
                 <div class="info-box"><strong>提示:</strong> 添加或删除斋日操作立即生效。</div>
                 <h4>添加新特殊日期</h4>
@@ -49,7 +79,7 @@
         </div>
 
         <div class="admin-section">
-             <h3 class="collapsible">预约时间段管理 <span class="toggle-icon">【双击进入】</span></h3>
+             <h3 class="collapsible">预约时间段管理 <span class="toggle-icon">【单击进入】</span></h3>
             <div class="collapsible-content" style="display:none;">
                 <div class="info-box"><strong>提示:</strong> 修改或删除时间段列表将可能造成现有记录丢失。请确保格式为 "HH:MM-HH:MM"。</div>
                 <form action="{{ url_for('manage_time_slots') }}" method="post" id="timeSlotsForm" onsubmit="_hmt.push(['_trackEvent', 'AdminPanel', 'TimeSlots', 'Save Submit']);">
@@ -68,7 +98,7 @@
         </div>
 
         <div class="admin-section">
-            <h3 class="collapsible">公告管理 <span class="toggle-icon">【双击进入】</span></h3>
+            <h3 class="collapsible">公告管理 <span class="toggle-icon">【单击进入】</span></h3>
             <div class="collapsible-content" style="display:none;">
                 <div class="info-box"><strong>提示:</strong> 在此添加、删除公告。公告将显示在预约日历下方。</div>
                 <h4>添加新公告</h4>
@@ -93,6 +123,14 @@
                     {% endfor %}
                 </ul>
                 {% else %}<p>当前没有设置公告。</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="collapsible">数据管理 <span class="toggle-icon">【双击进入】</span></h3>
+            <div class="collapsible-content" style="display:none;">
+                <p>将当前所有的预约数据和操作日志导出为 CSV 文件。</p>
+                <a href="{{ url_for('export_data') }}" class="button-primary" onclick="_hmt.push(['_trackEvent', 'AdminPanel', 'Data', 'Export CSV Click']);">导出为 .CSV 文件</a>
             </div>
         </div>
 

@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 折叠面板
     const collapsibles = document.querySelectorAll('.collapsible');
     collapsibles.forEach(button => {
-        button.addEventListener('dblclick', function() { // 改为双击触发
+        button.addEventListener('click', function() { // 改为双击触发
             const content = this.nextElementSibling;
             const panelTitle = this.innerText.split('\n')[0].trim(); // 获取面板标题
 

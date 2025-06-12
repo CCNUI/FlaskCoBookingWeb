@@ -444,3 +444,51 @@ a:hover {
     background-color: var(--primary-color);
     color: white;
 }
+
+/* 活跃管理员信息提示框样式 */
+.admin-info-box {
+    background-color: #e7f3fe;
+    border: 1px solid #b3d7ff;
+    color: #004085;
+    padding: 15px;
+    margin: 20px auto;
+    border-radius: 8px;
+    max-width: 800px;
+}
+.admin-info-box p {
+    margin-top: 0;
+    font-size: 1.1rem;
+}
+.admin-info-box ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+.admin-info-box li {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 8px 12px;
+    margin-top: 5px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Flash 消息样式 */
+.flash-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+.flash-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
