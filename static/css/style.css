@@ -109,24 +109,63 @@ a:hover {
 
 
 /* --- 欢迎页 --- */
+/*
+    这是修改过的部分。
+    - .overlap-container 用于创建定位上下文。
+    - .welcome-image 和 .icon-large 使用绝对定位在其中重叠。
+*/
 .welcome-container {
     text-align: center;
-    padding: 4rem 1rem;
+    padding: 2rem 1rem;
 }
+
+.overlap-container {
+    position: relative; /* 为绝对定位的子元素提供基准 */
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 2rem; /* 水平居中并与下方标题产生间距 */
+}
+
+.welcome-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* 提高图片层级，让它在上面 */
+}
+
+.welcome-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    opacity: 1; /* 关键：给图片添加透明度，这样才能看到下面的灯泡 */
+}
+
 .welcome-container .icon-large {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-size: 5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    z-index: 5;
+    text-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
+
 .welcome-container h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
 }
+
 .welcome-container .welcome-text {
     font-size: 1.2rem;
     color: #555;
     max-width: 600px;
     margin: 0 auto 2rem auto;
 }
+/* --- 欢迎页样式结束 --- */
 
 /* --- 预约日历页 --- */
 .schedule-header {
