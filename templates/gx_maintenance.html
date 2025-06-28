@@ -133,21 +133,47 @@
             100% { transform: translateX(100%); }
         }
 
+        /* --- Responsive Title Word Breaking --- */
+        .title-break {
+          text-align: center;
+        }
+        .title-break span {
+          white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+          .title-break .part-1::after {
+            content: "\A";
+            white-space: pre;
+          }
+        }
+        @media (max-width: 480px) {
+          .title-break .part-2::after {
+            content: "\A";
+            white-space: pre;
+          }
+        }
+        @media (max-width: 360px) {
+            .maintenance-container h1.title-break {
+                font-size: clamp(1.5rem, 10vw, 1.8rem);
+                line-height: 1.3;
+            }
+        }
+
     </style>
 </head>
 <body>
     <header class="main-header">
         <div class="container">
-            <a href="#" class="logo">������ 优智通科技</a>
+            <a href="#" class="logo"> 优智通科技</a>
         </div>
     </header>
 
     <main class="container">
         <div class="maintenance-container">
             <div id="status-icon" class="icon-large spinning">⚙️</div>
-            <h1>密行组早课共修排麦表</h1>
+            <h1 class="title-break"><span class="part-1">密行组</span><span class="part-2">早课共修</span><span class="part-3">排麦表</span></h1>
             <p id="main-message">
-                系统正在重新启动，请等待5分钟������������������
+                系统正在重新启动，请等待5分钟
                 <br>
                如果网站长时间未恢复，请联系站长 @榕缘 提供帮助。
             </p>
@@ -171,7 +197,7 @@
             const statusIcon = document.getElementById('status-icon');
             const mainMessage = document.getElementById('main-message');
             const progressBarInner = document.getElementById('progress-bar-inner');
-            
+
             const startTime = Date.now();
             const maxDuration = 60 * 60 * 1000; // 1小时的毫秒数
 
@@ -196,7 +222,7 @@
                     progressBarInner.classList.remove('progress-animated');
                     return; // 停止所有后续操作
                 }
-                
+
                 attempts++;
                 updateStatus(`请5分钟后刷新页面再试...`);
 
@@ -213,11 +239,11 @@
                         statusIcon.textContent = '✅';
                         statusIcon.classList.remove('spinning');
                         progressBarInner.classList.remove('progress-animated');
-                        
+
                         const finalDelay = 2000 + checkInterval; // 2秒 + 随机检查间隔
                         const finalCountdown = Math.round(finalDelay / 1000);
                         updateStatus(`请尝试手动刷新页面...`);
-                        
+
                         setTimeout(() => {
                             window.location.reload(true);
                         }, finalDelay);
@@ -245,4 +271,3 @@
     </script>
 </body>
 </html>
-

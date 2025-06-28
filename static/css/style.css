@@ -545,3 +545,41 @@ thead th.sticky-header:first-child {
     border: 1px solid transparent;
     border-radius: .25rem;
 }
+
+/* --- Responsive Title Word Breaking --- */
+
+/* Center the title text when it breaks into multiple lines */
+.title-break {
+  text-align: center;
+}
+
+/* By default, spans are inline and have no extra space.
+   white-space: nowrap prevents breaking *within* a part like "早课共修". */
+.title-break span {
+  white-space: nowrap;
+}
+
+/* First breakpoint: Force a line break after "密行组" */
+@media (max-width: 420px) {
+  .title-break .part-1::after {
+    content: "\A"; /* This is a CSS newline character */
+    white-space: pre; /* This tells the browser to respect the newline */
+  }
+}
+
+/* Second breakpoint: Force a line break after "早课共修" */
+@media (max-width: 300px) {
+  .title-break .part-2::after {
+    content: "\A"; /* Add another newline */
+    white-space: pre;
+  }
+}
+
+/* Last resort: shrink font size on very narrow screens */
+@media (max-width: 280px) {
+    .welcome-container h1.title-break,
+    .schedule-header h2.title-break {
+        font-size: clamp(1.2rem, 10vw, 1.6rem);
+        line-height: 1.3;
+    }
+}
