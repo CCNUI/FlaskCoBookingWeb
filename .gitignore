@@ -4,8 +4,8 @@ pycache/
 
 venv/
 .env
-instance/
-*.sqlite
 
 .vscode/
 .idea/
+
+backup_to_gitlab.sh
