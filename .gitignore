@@ -7,3 +7,5 @@ venv/
 
 .vscode/
 .idea/
+
+backup_to_gitlab.sh
