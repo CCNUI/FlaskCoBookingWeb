@@ -1,63 +1,35 @@
 #!/bin/bash
-set -e # Exit immediately if a command exits with a non-zero status.
+set -e # 如果任何命令执行失败，立即退出脚本
 
-# ================== CONFIGURATION ==================
-# IMPORTANT: Fill in these variables with your actual paths and credentials.
+# ================== 数据库备份配置 ==================
+# 1. 您的 Flask 项目的完整路径
+PROJECT_PATH="/home/ecs-user/FlaskCoBookingWeb"
 
-# 1. Full path to your Flask project directory (the one containing the 'instance' folder)
-PROJECT_PATH="/path/to/your/FlaskCoBookingWeb-not_finished_But_succeed_run"
+# 2. 【数据库备份专用】的本地克隆仓库的完整路径
+BACKUP_REPO_PATH="/home/ecs-user/backup/FlaskCoBookingWeb_database"
 
-# 2. Full path to the local clone of your PRIVATE backup repository
-BACKUP_REPO_PATH="/home/your_user/my-booking-backup"
+# 5. 您在 GitLab 上创建的【数据库备份专用】的项目名称
+GITLAB_PROJECT_NAME="my-booking-backup" # 注意：这是存放数据库的仓库名
 
-# 3. Your GitLab Personal Access Token
-GITLAB_TOKEN="g****Xsz" # Replace with your full, unredacted token
-
-# 4. Your GitLab username
-GITLAB_USERNAME="your_gitlab_username"
-
-# 5. The name of your private backup project on GitLab
-GITLAB_PROJECT_NAME="my-booking-backup"
-
-# ================== DO NOT EDIT BELOW THIS LINE ==================
-
-# Define source database file and the name for the backup file
+# ================== 请勿修改以下内容 ==================
 DB_SOURCE_FILE="$PROJECT_PATH/instance/reservations.sqlite"
-BACKUP_FILENAME="reservations.sqlite" # Using a consistent filename to track changes
-COMMIT_MESSAGE="Automated backup: $(date +'%Y-%m-%d %H:%M:%S')"
+BACKUP_FILENAME="reservations.sqlite"
+COMMIT_MESSAGE="自动化数据库备份: $(date +'%Y-%m-%d %H:%M:%S')"
 
-# --- SCRIPT LOGIC ---
-
-echo "Starting database backup process..."
-
-# 1. Navigate to the backup repository directory
+echo "开始执行数据库备份..."
 cd "$BACKUP_REPO_PATH"
-
-# 2. Copy the latest database file into the backup repository
-echo "Copying database file from $DB_SOURCE_FILE..."
+echo "正在从 $DB_SOURCE_FILE 复制数据库文件..."
 cp -f "$DB_SOURCE_FILE" "$BACKUP_REPO_PATH/$BACKUP_FILENAME"
-
-# 3. Perform Git operations
-echo "Performing Git operations..."
-
-# Check if there are any changes to the database file
+echo "正在执行 Git 操作..."
 if [[ `git status --porcelain` ]]; then
-    echo "Database has changed. Committing and pushing to GitLab..."
-
-    # Configure Git user for this commit
-    git config user.name "Automated Backup"
-    git config user.email "backup@your-server.com"
-
-    # Add the new backup file, commit, and push
+    echo "检测到数据库变更，正在提交并推送到 GitLab..."
+    git config user.name "Automated Backup-MingxiaoYun"
+    git config user.email "backup@MingxiaoYun.com"
     git add "$BACKUP_FILENAME"
     git commit -m "$COMMIT_MESSAGE"
-
-    # Push to the remote repository using the token for authentication
-    git push "https://oauth2:$GITLAB_TOKEN@gitlab.com/$GITLAB_USERNAME/$GITLAB_PROJECT_NAME.git"
-
-    echo "Backup successfully pushed to GitLab."
+    git push
+    echo "数据库备份已成功推送到 GitLab。"
 else
-    echo "No changes detected in the database. Skipping backup."
+    echo "数据库无变化，本次无需备份。"
 fi
-
-echo "Backup script finished."
+echo "数据库备份脚本执行完毕。"
