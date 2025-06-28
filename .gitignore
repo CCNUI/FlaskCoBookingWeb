@@ -7,5 +7,7 @@ venv/
 
 .vscode/
 .idea/
+instance/
+reservations.sqlite
 
 backup_to_gitlab.sh
