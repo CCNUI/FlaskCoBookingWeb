@@ -4,8 +4,6 @@ pycache/
 
 venv/
 .env
-instance/
-*.sqlite
 
 .vscode/
 .idea/
