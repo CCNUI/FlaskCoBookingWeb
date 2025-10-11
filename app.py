@@ -340,9 +340,22 @@ def get_schedule_data(start_date_str):
     else:
         start_date = today
 
+    # 计算当前被查看周的周一
     start_of_week = start_date - timedelta(days=start_date.weekday())
+    # 计算真实世界的本周一和下一周的周一，作为判断边界
+    actual_start_of_this_week = today - timedelta(days=today.weekday())
+    actual_start_of_next_week = actual_start_of_this_week + timedelta(days=7)
+
     prev_week_start = start_of_week - timedelta(days=7)
     next_week_start = start_of_week + timedelta(days=7)
+
+    # --- 新增逻辑：判断是否应显示导航链接 ---
+    # 如果正在查看本周或更早，则隐藏“上一周”
+    show_prev_link = start_of_week > actual_start_of_this_week
+    # 如果正在查看下一周或更晚，则隐藏“下一周”
+    show_next_link = start_of_week < actual_start_of_next_week
+    # 如果不在本周，则显示“返回本周”
+    show_this_week_link = start_of_week != actual_start_of_this_week
 
     week_days = []
     # 修改：使用缩写的星期名，并生成缩写日期字符串
@@ -369,7 +382,11 @@ def get_schedule_data(start_date_str):
         "reservations": get_all_reservations(),
         "time_slots": get_setting('time_slots', DEFAULT_TIME_SLOTS),
         "special_dates": get_setting('special_dates', {}),
-        "notices": get_setting('notices', [])
+        "notices": get_setting('notices', []),
+        # --- 新增传递给模板的变量 ---
+        "show_prev_link": show_prev_link,
+        "show_next_link": show_next_link,
+        "show_this_week_link": show_this_week_link
     }
 
 

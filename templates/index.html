@@ -9,11 +9,19 @@
 {% block content %}
 <div class="schedule-header">
     <h2 class="title-break"><span class="part-1">密行组</span><span class="part-2">早课共修</span><span class="part-3">排麦表</span></h2>
-    <div class="date-navigation">
-        <a href="{{ url_for('schedule', start_date=prev_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Previous Week']);">&laquo; 上一周</a>
-        <a href="{{ url_for('schedule') }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'This Week']);">返回本周</a>
-        <a href="{{ url_for('schedule', start_date=next_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Next Week']);">下一周 &raquo;</a>
-    </div>
+        <div class="date-navigation">
+            {% if show_prev_link %}
+            <a href="{{ url_for('schedule', start_date=prev_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Previous Week']);">&laquo; 上一周</a>
+            {% endif %}
+
+            {% if show_this_week_link %}
+            <a href="{{ url_for('schedule') }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'This Week']);">返回本周</a>
+            {% endif %}
+
+            {% if show_next_link %}
+            <a href="{{ url_for('schedule', start_date=next_week_start) }}" onclick="_hmt.push(['_trackEvent', 'Calendar', 'Navigate', 'Next Week']);">下一周 &raquo;</a>
+            {% endif %}
+        </div>
     <p class="date-range">{{ date_range }}</p>
 </div>
 
