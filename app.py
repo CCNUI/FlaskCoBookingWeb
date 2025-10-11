@@ -340,36 +340,37 @@ def get_schedule_data(start_date_str):
     else:
         start_date = today
 
+    # --- 修改开始：三周逻辑 ---
     # 计算当前被查看周的周一
     start_of_week = start_date - timedelta(days=start_date.weekday())
-    # 计算真实世界的本周一和下一周的周一，作为判断边界
+
+    # 计算真实世界的边界：本周一，以及未来第二周的周一
     actual_start_of_this_week = today - timedelta(days=today.weekday())
-    actual_start_of_next_week = actual_start_of_this_week + timedelta(days=7)
+    actual_start_of_week_after_next = actual_start_of_this_week + timedelta(days=14)
 
     prev_week_start = start_of_week - timedelta(days=7)
     next_week_start = start_of_week + timedelta(days=7)
 
-    # --- 新增逻辑：判断是否应显示导航链接 ---
+    # 判断是否应显示导航链接
     # 如果正在查看本周或更早，则隐藏“上一周”
     show_prev_link = start_of_week > actual_start_of_this_week
-    # 如果正在查看下一周或更晚，则隐藏“下一周”
-    show_next_link = start_of_week < actual_start_of_next_week
+    # 如果正在查看未来第二周或更晚，则隐藏“下一周”
+    show_next_link = start_of_week < actual_start_of_week_after_next
     # 如果不在本周，则显示“返回本周”
     show_this_week_link = start_of_week != actual_start_of_this_week
+    # --- 修改结束：三周逻辑 ---
 
     week_days = []
-    # 修改：使用缩写的星期名，并生成缩写日期字符串
     week_day_abbrs = ["一", "二", "三", "四", "五", "六", "日"]
     for i in range(7):
         current_day = start_of_week + timedelta(days=i)
-        # 生成缩写格式，例如 "6.9周一"
         abbr_display_str = f"{current_day.month}.{current_day.day}周{week_day_abbrs[i]}"
         week_days.append({
             "date_obj": current_day,
             "date_str": current_day.strftime('%Y-%m-%d'),
             "display": current_day.strftime('%m月%d日'),
-            "weekday": f"星期{week_day_abbrs[i]}",  # 完整的星期名
-            "abbr_display": abbr_display_str  # 新增的缩写名
+            "weekday": f"星期{week_day_abbrs[i]}",
+            "abbr_display": abbr_display_str
         })
 
     date_range_str = f"{week_days[0]['display']} ({week_days[0]['weekday']}) - {week_days[-1]['display']} ({week_days[-1]['weekday']})"
@@ -383,7 +384,7 @@ def get_schedule_data(start_date_str):
         "time_slots": get_setting('time_slots', DEFAULT_TIME_SLOTS),
         "special_dates": get_setting('special_dates', {}),
         "notices": get_setting('notices', []),
-        # --- 新增传递给模板的变量 ---
+        # 传递给模板的变量
         "show_prev_link": show_prev_link,
         "show_next_link": show_next_link,
         "show_this_week_link": show_this_week_link
@@ -401,7 +402,6 @@ def schedule():
     """主预约日历视图"""
     start_date_str = request.args.get('start_date')
     context = get_schedule_data(start_date_str)
-    # 移除：不再需要传递 table_layout
     return render_template('index.html', **context)
 
 
@@ -457,14 +457,12 @@ def admin_login():
     if request.method == 'POST':
         password = request.form.get('password')
         if password == admin_password:
-            session.permanent = True  # 使 session 永久（受 PERMANENT_SESSION_LIFETIME 控制）
+            session.permanent = True
             session['admin_logged_in'] = True
 
-            # 为 Redis 会话生成一个唯一ID
             if 'session_id' not in session:
                 session['session_id'] = str(uuid.uuid4())
 
-            # 仅在 Redis 环境下执行高级会话管理
             if redis_conn:
                 ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
                 ip_info = get_ip_info(ip_address)
@@ -475,7 +473,6 @@ def admin_login():
                     "region": region,
                     "login_time": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
                 }
-                # 存储当前会话信息到 Redis，有效期60分钟
                 redis_conn.setex(f"admin_session:{session['session_id']}", 3600, json.dumps(session_details))
 
             return redirect(url_for('admin_dashboard'))
@@ -495,7 +492,6 @@ def admin_dashboard():
     """管理员后台主面板 - 显示活跃管理员信息"""
     active_sessions, unique_admin_count = get_active_admins()
 
-    # 将活跃管理员信息传递给模板
     flash({"count": unique_admin_count, "sessions": active_sessions}, "admin_info")
 
     special_dates = get_setting('special_dates', {})
@@ -511,11 +507,10 @@ def admin_dashboard():
 
 @app.route('/admin/logout')
 def admin_logout():
-    # 仅在 Redis 环境下，清理会话信息
     if redis_conn and 'session_id' in session:
         redis_conn.delete(f"admin_session:{session['session_id']}")
 
-    session.clear()  # 清除所有 session 数据
+    session.clear()
     flash("您已成功退出登录。", "info")
     return redirect(url_for('admin_login'))
 
@@ -547,14 +542,11 @@ def manage_special_dates():
 def manage_time_slots():
     """管理时间段"""
     new_time_slots = request.form.getlist('time_slot')
-    # 过滤掉空值
     new_time_slots = [slot.strip() for slot in new_time_slots if slot.strip()]
     if new_time_slots:
         save_setting('time_slots', new_time_slots)
     return redirect(url_for('admin_dashboard'))
 
-
-# 移除：不再需要 manage_table_layout 路由
 
 @app.route('/admin/notices', methods=['POST'])
 @admin_required
@@ -615,39 +607,33 @@ def export_data():
     if not ENABLE_EXPORT_CSV:
         abort(404)
 
-    # 1. 获取数据
     reservations = get_all_reservations()
-    logs = get_all_logs(limit=10000)  # 导出时获取更多日志
+    logs = get_all_logs(limit=10000)
 
-    # 2. 创建内存中的 CSV 文件
     si = io.StringIO()
     cw = csv.writer(si)
 
-    # 写入预约数据
     cw.writerow(['--- Reservations ---'])
     cw.writerow(['Date', 'Time Slot', 'User Name'])
-    # 排序以获得一致的输出
     sorted_dates = sorted(reservations.keys())
     for date_str in sorted_dates:
         sorted_slots = sorted(reservations[date_str].keys())
         for slot in sorted_slots:
             cw.writerow([date_str, slot, reservations[date_str][slot]])
 
-    cw.writerow([])  # 空行分隔
+    cw.writerow([])
 
-    # 写入日志数据
     cw.writerow(['--- Logs ---'])
     cw.writerow(['Timestamp (UTC)', 'Action', 'Date', 'Time Slot', 'Old User', 'New User'])
     for log in logs:
         cw.writerow([
             log.get('timestamp'), log.get('action'), log.get('date'),
-            log.get('time_slot'), log.get('old_user', log.get('old_user_name')),  # 兼容两种 key
+            log.get('time_slot'), log.get('old_user', log.get('old_user_name')),
             log.get('new_user', log.get('new_user_name'))
         ])
 
     output = si.getvalue()
 
-    # 3. 返回 CSV 文件
     return Response(
         output,
         mimetype="text/csv",
@@ -656,7 +642,6 @@ def export_data():
 
 
 # --- 新增：实验性页面路由 ---
-
 @app.route('/experimental/copy-paste')
 @admin_required
 def experimental_copy_paste():
